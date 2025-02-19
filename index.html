@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Preconnect to external fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Link to Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+
+    <!-- Correct paths to external CSS files -->
+    <link rel="stylesheet" href="styles/text.css">
+    <link rel="stylesheet" href="styles/gallery.css">
+    <link rel="stylesheet" href="styles/modalStyle.css">
+    <link rel="stylesheet" href="styles/mobileResponsiveness.css">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bs-rankedstats</title>
+    <link rel="icon" type="image/png" href="assets/ranked_logo.png">
+</head>
+<body>
+
+    <h1>Ranked draft helper</h1>
+
+    <!-- Hotzone Category -->
+    <div class="category">
+        <div class="category-title">
+            <img src="assets/hotzone/hotzone.png" alt="Hotzone Icon" class="category-icon">
+            Hotzone
+        </div>
+        <div class="gallery">
+            <a href="javascript:void(0)" onclick="openModal('assets/hotzone/duelingbeetles.webp')">
+                <img src="assets/hotzone/duelingbeetles.webp" alt="Hotzone 1">
+                <div class="caption">Dueling Beetles</div>
+            </a>
+            <a href="javascript:void(0)" onclick="openModal('assets/hotzone/parallelplays.webp')">
+                <img src="assets/hotzone/parallelplays.webp" alt="Hotzone 2">
+                <div class="caption">Parrallel Plays</div>
+            </a>
+            <a href="javascript:void(0)" onclick="openModal('assets/hotzone/ringoffire.webp')">
+                <img src="assets/hotzone/ringoffire.webp" alt="Hotzone 3">
+                <div class="caption">Ring of Fire</div>
+            </a>
+            <a href="javascript:void(0)" onclick="openModal('assets/hotzone/openbusiness.webp')">
+                <img src="assets/hotzone/openbusiness.webp" alt="Hotzone 4">
+                <div class="caption">Open Business</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Bounty Category -->
+    <div class="category">
+        <div class="category-title">
+            <img src="assets/bounty/bounty.png" alt="Bouty Icon" class="category-icon">
+            Bounty
+        </div>
+        <div class="gallery">
+            <a href="javascript:void(0)" onclick="openModal('assets/bounty/canal_grande.png')">
+                <img src="assets/bounty/canal_grande.png" alt="Bounty 1">
+                <div class="caption">Canal Grande</div>
+            </a>
+            <a href="javascript:void(0)" onclick="openModal('assets/bounty/hideout.png')">
+                <img src="assets/bounty/hideout.png" alt="Bounty 2">
+                <div class="caption">Hideout</div>
+            </a>
+            <a href="javascript:void(0)" onclick="openModal('assets/bounty/shootingstar.png')">
+                <img src="assets/bounty/shootingstar.png" alt="Bounty 3">
+                <div class="caption">Shooting Star</div>
+            </a>
+            <a href="javascript:void(0)" onclick="openModal('assets/bounty/snakeprairie.png')">
+                <img src="assets/bounty/snakeprairie.png" alt="Bounty 4">
+                <div class="caption">Snake Prairie</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Brawlball Category -->
+    <div class="category">
+        <div class="category-title">
+            <img src="assets/brawlball/brawl_ball.png" alt="BrawlBall Icon" class="category-icon">
+            Brawlball
+        </div>
+        <div class="gallery">
+            <a href="javascript:void(0)" onclick="openModal('assets/brawlball/pinballdreams.webp')">
+                <img src="assets/brawlball/pinballdreams.webp" alt="Brawlball 1">
+                <div class="caption">Pinball dreams</div>
+            </a>
+            <a href="javascript:void(0)" onclick="openModal('assets/brawlball/centerstage.webp')">
+                <img src="assets/brawlball/centerstage.webp" alt="Brawlball 2">
+                <div class="caption">Center Stage</div>
+            </a>
+            <a href="javascript:void(0)" onclick="openModal('assets/brawlball/tripledribble.webp')">
+                <img src="assets/brawlball/tripledribble.webp" alt="Brawlball 3">
+                <div class="caption">Triple Dribble</div>
+            </a>
+            <a href="javascript:void(0)" onclick="openModal('assets/brawlball/sneakyfields.webp')">
+                <img src="assets/brawlball/sneakyfields.webp" alt="Brawlball 4">
+                <div class="caption">Sneaky Fields</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Gemgrab Category -->
+    <div class="category">
+        <div class="category-title">
+            <img src="assets/gemgrab/gem_grab.png" alt="Gem grab Icon" class="category-icon">
+            Gemgrab
+        </div>
+        <div class="gallery">
+            <a href="javascript:void(0)" onclick="openModal('assets/gemgrab/doubleswoosh.webp')">
+                <img src="assets/gemgrab/doubleswoosh.webp" alt="Gemgrab 1">
+                <div class="caption">Double Swoosh</div>
+            </a>
+            <a href="javascript:void(0)" onclick="openModal('assets/gemgrab/laststop.webp')">
+                <img src="assets/gemgrab/laststop.webp" alt="Gemgrab 2">
+                <div class="caption">Last Stop</div>
+            </a>
+            <a href="javascript:void(0)" onclick="openModal('assets/gemgrab/undermine.webp')">
+                <img src="assets/gemgrab/undermine.webp" alt="Gemgrab 3">
+                <div class="caption">Undermine</div>
+            </a>
+            <a href="javascript:void(0)" onclick="openModal('assets/gemgrab/hardrockmine.webp')">
+                <img src="assets/gemgrab/hardrockmine.webp" alt="Gemgrab 4">
+                <div class="caption">Hard Rock Mine</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Heist Category -->
+    <div class="category">
+        <div class="category-title">
+            <img src="assets/heist/heist.png" alt="Heist Icon" class="category-icon">
+            Heist
+        </div>
+        <div class="gallery">
+            <a href="javascript:void(0)" onclick="openModal('assets/heist/bridgetoofar.webp')">
+                <img src="assets/heist/bridgetoofar.webp" alt="Heist 1">
+                <div class="caption">Bridge Too Far</div>
+            </a>
+            <a href="javascript:void(0)" onclick="openModal('assets/heist/hotpotato.webp')">
+                <img src="assets/heist/hotpotato.webp" alt="Heist 2">
+                <div class="caption">Hot Potato</div>
+            </a>
+            <a href="javascript:void(0)" onclick="openModal('assets/heist/safezone.webp')">
+                <img src="assets/heist/safezone.webp" alt="Heist 3">
+                <div class="caption">Safe Zone</div>
+            </a>
+            <a href="javascript:void(0)" onclick="openModal('assets/heist/kaboomcanyon.webp')">
+                <img src="assets/heist/kaboomcanyon.webp" alt="Heist 4">
+                <div class="caption">Kaboom Canyon</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Knockout Category -->
+    <div class="category">
+        <div class="category-title">
+            <img src="assets/knockout/knockout.png" alt="Knockout icon" class="category-icon">
+            Knockout
+        </div>
+        <div class="gallery">
+            <a href="javascript:void(0)" onclick="openModal('assets/knockout/bellesrock.webp')">
+                <img src="assets/knockout/bellesrock.webp" alt="Knockout 1">
+                <div class="caption">Belles Rock</div>
+            </a>
+            <a href="javascript:void(0)" onclick="openModal('assets/knockout/flaringphoenix.webp')">
+                <img src="assets/knockout/flaringphoenix.webp" alt="Knockout 2">
+                <div class="caption">Flaring Phoenix</div>
+            </a>
+            <a href="javascript:void(0)" onclick="openModal('assets/knockout/outintheopen.webp')">
+                <img src="assets/knockout/outintheopen.webp" alt="Knockout 3">
+                <div class="caption">Out in the Open</div>
+            </a>
+            <a href="javascript:void(0)" onclick="openModal('assets/knockout/goldarmgulch.webp')">
+                <img src="assets/knockout/goldarmgulch.webp" alt="Knockout 4">
+                <div class="caption">Goldarm Gulch</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="myModal" class="modal">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <img class="modal-content" id="img01">
+    </div>
+
+    <script>
+        // Open the modal with the image
+        function openModal(assetsrc) {
+            var modal = document.getElementById("myModal");
+            var modalImg = document.getElementById("img01");
+            modal.style.display = "block";
+            modalImg.src = assetsrc;
+        }
+
+        // Close the modal
+        function closeModal() {
+            var modal = document.getElementById("myModal");
+            modal.style.display = "none";
+        }
+
+        // Close the modal if clicked outside of the image
+        window.onclick = function(event) {
+            var modal = document.getElementById("myModal");
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+
+</body>
+</html>
