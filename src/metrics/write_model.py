@@ -1,3 +1,4 @@
+import numpy as np
 import psycopg2
 import pandas as pd
 import sys
@@ -48,7 +49,7 @@ FROM (
 	            unnest(string_to_array(wTeam, '-')) AS brawler,
 	            result
 	        FROM battles
-	        --WHERE avg_rank > 15
+	        WHERE avg_rank > 12
 	        UNION ALL
 	        SELECT
 	            id,
@@ -59,7 +60,7 @@ FROM (
 	            unnest(string_to_array(lTeam, '-')) AS brawler,
 	            result
 	        FROM battles
-	        --WHERE avg_rank > 15
+	        WHERE avg_rank > 12
 	    ) AS brawlers
 	    GROUP BY brawler, map
 	) AS brawler_stats
@@ -77,22 +78,26 @@ df['win_rate_norm'] = (df['win_rate'] - df['win_rate'].min()) / (df['win_rate'].
 df['usage_rate_norm'] = (df['usage_rate'] - df['usage_rate'].min()) / (df['usage_rate'].max() - df['usage_rate'].min())
 
 # Define a minimum usage rate threshold
-min_usage_rate = 0.05  # Example threshold, adjust as needed
+min_usage_rate = 0.07  # Example threshold, adjust as needed
 
 # Apply the minimum usage rate threshold
-df['usage_penalty'] = df['usage_rate_norm'].apply(lambda x: 1 if x >= min_usage_rate else 0)
-
+slope = 10  
+df['usage_penalty'] = df['usage_rate_norm'].apply(
+    lambda x: 1 / (1 + np.exp(-slope * (x - min_usage_rate)))
+)
 # Define the weights
-win_rate_weight = 0.4
-usage_rate_weight = 0.6
+win_rate_weight = 0.7
+usage_rate_weight = 0.3
 
 # Calculate the score using normalized metrics and usage penalty
-df['score'] = (df['win_rate_norm'] * win_rate_weight) + (df['usage_rate_norm'] * usage_rate_weight) * df['usage_penalty']
+df['score'] = ((df['win_rate_norm'] * win_rate_weight) + (df['usage_rate_norm'] * usage_rate_weight)) * df['usage_penalty']
+
+df_sorted = df.sort_values(by='score', ascending=False)
 
 # Print the ranked brawlers
-print(df[['map', 'brawler', 'score', 'win_rate', 'usage_rate']])
+print(df_sorted[['map', 'brawler', 'score', 'win_rate', 'usage_rate', 'usage_rate_norm', 'usage_penalty', 'win_rate_norm']])
 
-df.to_pickle('./data/model/rankedstats_permaps.pkl')
+df_sorted.to_pickle('./data/model/rankedstats_permaps.pkl')
 
 
 # Close the database connection

@@ -156,7 +156,6 @@ def transform_battle(postgreService, brawlers, b: Dict[str, Any]) -> Dict[str, A
 
     wTeam = f"{brawler1Winner}-{brawler2Winner}-{brawler3Winner}"
     lTeam = f"{brawler1Loser}-{brawler2Loser}-{brawler3Loser}"
-
     
     # teams = b["battle"].get("teams", [[p] for p in b["battle"].get("players", [])])
     # if "bigBrawler" in b["battle"]:
