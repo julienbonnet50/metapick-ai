@@ -1,2 +1,4 @@
 # bs-ranked-stats
-Little exposition to get best pick per maps in ranked
+
+Python website to expose ranked stats for Brawl Stars
+
