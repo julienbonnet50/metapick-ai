@@ -11,6 +11,15 @@ class DraftService:
         # Load the DataFrame from the pickle file
         self.df = pd.read_pickle('data/model/rankedstats_permaps_topsis2.pkl')
 
+    def get_top15_brawler_by_map(self, mapName):
+        # Filter the DataFrame for the specified map
+        filtered_df = self.df[self.df['map'] == mapName]
+        # Sort the DataFrame by a relevant column (e.g., 'score') and get the top 15 brawlers
+        top15_df = filtered_df.sort_values(by='topsis_score', ascending=False).head(15)
+
+        # Return the list of top 15 brawlers
+        return top15_df[['brawler', 'topsis_score']].values.tolist()
+
     def run_draft(self, map_name, excluded_brawlers, initial_team, initial_opponent, saveEnabled=False):
         # Filter the DataFrame for the specified map
         filtered_df = self.df[self.df['map'] == map_name]
