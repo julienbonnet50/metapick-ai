@@ -9,9 +9,6 @@ import numpy as np
 sys.path.append(os.getcwd())
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
-import src.config.AppConfig as AppConfig
-
-appConfig = AppConfig.AppConfig()
 
 # Update Brawler class to include the pre-calculated score
 class Brawler:
@@ -65,16 +62,20 @@ class DraftState:
     def __repr__(self):
         return f"Team A: {[b.name for b in self.team]}, Team B: {[b.name for b in self.opponent_team]}, Map: {self.map_name}"
 
+# --- Updated Node Class ---
 class Node:
-    def __init__(self, state, parent=None):
+    def __init__(self, state, parent=None, action=None):
         self.state = state
         self.parent = parent
+        self.action = action  # the brawler that was picked to reach this node from its parent
         self.children = []
         self.visits = 0
         self.value = 0
 
     def is_fully_expanded(self):
-        return len(self.children) == len(self.state.get_legal_actions())
+        legal_actions = self.state.get_legal_actions()
+        tried_actions = {child.action.name for child in self.children if child.action is not None}
+        return len(legal_actions) == len(tried_actions)
 
     def best_child(self, c_param=1.4):
         choices_weights = [
@@ -95,16 +96,14 @@ def select(node):
     return node
 
 def expand(node):
-    tried_names = [b.name for child in node.children for b in (child.state.team + child.state.opponent_team)]
-    print(f"Tried names: {tried_names}")
-    available_actions = node.state.get_legal_actions()
-    print(f"Available actions: {[b.name for b in available_actions]}")
-    for action in available_actions:
-        if action.name not in tried_names:
+    # Instead of scanning the entire team's picks, we now just track the action that led to each child.
+    tried_actions = {child.action.name for child in node.children if child.action is not None}
+    for action in node.state.get_legal_actions():
+        if action.name not in tried_actions:
             new_state = node.state.take_action(action)
-            new_node = Node(new_state, parent=node)
+            new_node = Node(new_state, parent=node, action=action)
             node.children.append(new_node)
-            print(f"Expanded node with action: {action.name}")
+            # print(f"Expanded node with action: {action.name}")
             return new_node
     raise Exception("No valid actions to expand.")
 
@@ -142,52 +141,3 @@ def evaluate_state(state):
     team_B_score = sum(b.score for b in state.opponent_team if b.map_name == state.map_name)
     # A positive reward favors team A; negative favors team B.
     return team_A_score - team_B_score
-
-# Load the DataFrame from the pickle file
-df = pd.read_pickle('data/model/rankedstats_permaps.pkl')
-
-# Exclude specific brawlers
-excluded_brawlers = ["LOU", "SPIKE"]
-
-# Filter the DataFrame for a specific map
-map_name = "Ring of Fire"  # Replace with the desired map name
-filtered_df = df[df['map'] == map_name]
-
-# Create Brawler objects from the DataFrame, including the important score, excluding specific brawlers
-brawlers = [
-    Brawler(row['brawler'], row['win_rate'], row['usage_rate'], row['score'], row['map'])
-    for index, row in filtered_df.iterrows()
-    if row['brawler'] not in excluded_brawlers
-]
-
-# Create a lookup dictionary for brawlers by name.
-brawler_lookup = {b.name: b for b in brawlers}
-
-# Initialize teams using Brawler objects.
-initial_team = [brawler_lookup["PENNY"], brawler_lookup["JESSIE"]]
-initial_opponent = [brawler_lookup["STU"]]
-
-# Print the initial state for debugging
-print("Initial State:")
-print(f"Available Brawlers: {[b.name for b in brawlers]}")
-print(f"Initial Team A: {[b.name for b in initial_team]}")
-print(f"Initial Team B: {[b.name for b in initial_opponent]}")
-print(f"Map Name: {map_name}")
-
-initial_state = DraftState(brawlers, initial_team, initial_opponent, map_name)
-
-# Run MCTS to simulate the draft.
-final_state = mcts(initial_state, itermax=1000)
-
-print("Final draft state:")
-print(final_state)
-if final_state.team:
-    print(f"\nBest pick for team A (final pick): {final_state.team[-1].name}")
-else:
-    print("No picks for team A.")
-
-# Retrieve the top 15 brawlers for the specific map (for additional stats reporting)
-top_15_brawlers = filtered_df[~filtered_df['brawler'].isin(excluded_brawlers)].head(15)
-top_15_brawlers.to_csv('data/metrics/top_15_brawlers.csv', index=False)
-print("\nTop 15 brawlers for map '{}':".format(map_name))
-print(top_15_brawlers[['brawler', 'score', 'win_rate', 'usage_rate']])

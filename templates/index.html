@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brawl Stars Draft Simulator</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Brawl Stars Draft Simulator</h1>
+        <form id="draftForm" method="POST" action="/simulate_draft">
+            <div class="form-group">
+                <label for="map">Map Name</label>
+                <select class="form-control" id="map" name="map" required>
+                    {% for map in maps %}
+                        <option value="{{ map }}">{{ map }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="excluded_brawlers">Excluded Brawlers</label>
+                <select class="form-control select2" id="excluded_brawlers" name="excluded_brawlers" multiple="multiple">
+                    {% for brawler in brawlers %}
+                        <option value="{{ brawler }}">{{ brawler }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="initial_team">Initial Team</label>
+                <select class="form-control select2" id="initial_team" name="initial_team" multiple="multiple">
+                    {% for brawler in brawlers %}
+                        <option value="{{ brawler }}">{{ brawler }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="initial_opponent">Initial Opponent</label>
+                <select class="form-control select2" id="initial_opponent" name="initial_opponent" multiple="multiple">
+                    {% for brawler in brawlers %}
+                        <option value="{{ brawler }}">{{ brawler }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Simulate Draft</button>
+        </form>
+        <div id="result" class="mt-4"></div>
+    </div>
+
+    <!-- jQuery Full Version -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.select2').select2();
+
+            $('#draftForm').on('submit', function(event) {
+                event.preventDefault();
+                $.ajax({
+                    url: '/simulate_draft',
+                    method: 'POST',
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        $('#result').html('<pre>' + JSON.stringify(response, null, 2) + '</pre>');
+                    },
+                    error: function(xhr, status, error) {
+                        $('#result').html('<div class="alert alert-danger">' + xhr.responseJSON.error + '</div>');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
