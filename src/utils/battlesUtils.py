@@ -26,29 +26,18 @@ def get_battle_log(player_tag, API_KEY, BASE_URL, writeEnabled=False):
     else:
         return {"error": response.status_code, "message": response.text}
 
-
-def get_all_players_from_tag(player_tag, postgreService, brawlers, API_KEY, BASE_URL, writeEnable=False):
-    data = get_battle_log(player_tag=player_tag,
-                          API_KEY=API_KEY,
-                          BASE_URL=BASE_URL,
-                          writeEnabled=writeEnable)
-    
-    if data['items']:
-        for rawBattle in data['items']:
-            extract_players_from_battle(postgreService,
-                                        brawlers, 
-                                        rawBattle)
-
 def get_all_battles_from_tag(player_tag, postgreService, brawlers, API_KEY, BASE_URL, writeEnabled=False):
     data = get_battle_log(player_tag=player_tag,
                           API_KEY=API_KEY,
                           BASE_URL=BASE_URL,
                           writeEnabled=writeEnabled)
-    if data['items']:
+    try:
         for rawBattle in data['items']:
             transform_battle(postgreService,
                                         brawlers, 
                                         rawBattle)
+    except Exception as e:
+        print(e)
 
 def extract_players_from_battle(postgreService, brawlers, b: Dict[str, Any]) -> Dict[str, Any]:
     # Get the current date
@@ -79,28 +68,17 @@ def extract_players_from_battle(postgreService, brawlers, b: Dict[str, Any]) -> 
                 postgreService.insert_player(tag, last_rank, max_rank, insert_date, last_update_date)
 
 
-def transform_battle(postgreService, brawlers, b: Dict[str, Any]) -> Dict[str, Any]:
+def transform_battle(postgreService, brawlers, b: Dict[str, Any], insertNewPlayers=True) -> Dict[str, Any]:
     # Ignore any battles that are not ranked
     if b["battle"]["type"] not in ["soloRanked", "teamRanked"]:
         # print(f"Battle id ${b["event"]["id"]} is not a ranked game")
         return
-     
-    result = None
-    victory = None
+    
+    current_date = datetime.now().date().strftime('%Y-%m-%d')
     rank = None
     avg_rank = 0
     wTeam = None
     lTeam = None
-
-    if "players" in b["battle"]:
-        for player in b["battle"]["players"]:
-            if "brawler" in player:
-                player["brawler"]["name"] = player["brawler"].get("name") or brawlers.get(player["brawler"]["id"].upper())
-                player["brawler"]["name"] = player["brawler"]["name"].replace("\n", " ")
-            if "brawlers" in player:
-                for brawler in player["brawlers"]:
-                    brawler["name"] = brawler.get("name") or brawlers.get(player["brawler"]["id"].upper())
-                    brawler["name"] = brawler["name"].replace("\n", " ")
 
     if "rank" in b["battle"]:
         if b["battle"]["rank"] != -1:
@@ -141,9 +119,22 @@ def transform_battle(postgreService, brawlers, b: Dict[str, Any]) -> Dict[str, A
                     player["brawler"]["trophies"] = None
                 if player["brawler"]["power"] == -1:
                     player["brawler"]["power"] = 0
+
                 player["brawler"]["name"] = player["brawler"].get("name") or brawlers.get(player["brawler"]["id"].upper())
                 player["brawler"]["name"] = player["brawler"]["name"].replace("\n", " ")
                 avg_rank += player["brawler"]["trophies"]
+
+                if insertNewPlayers:
+                    tag = player["tag"]
+                    last_rank = player["brawler"]["trophies"]
+                    if last_rank > 19:
+                        last_rank = math.floor(last_rank / 500 + 1)
+
+                    max_rank = None
+                    insert_date = current_date
+                    last_update_date = current_date
+                    postgreService.insert_player(tag, last_rank, max_rank, insert_date, last_update_date)
+
 
     avg_rank = round(math.floor(avg_rank / 6), 1)
 
@@ -168,14 +159,15 @@ def transform_battle(postgreService, brawlers, b: Dict[str, Any]) -> Dict[str, A
     avg_rank = avg_rank,
     wTeam = wTeam,
     lTeam = lTeam,
-    result = result
 
     #  def insert_battle_stats(self, id, timestamp, map, mode, avg_rank, wTeam, lTeam, result):
-    postgreService.insert_battle_stats(id, timestamp, map, mode, avg_rank, wTeam, lTeam, result)
+    postgreService.insert_battle_stats(id, timestamp, map, mode, avg_rank, wTeam, lTeam, current_date)
 
 def check_brawler_name(name):
     if name in ["R-T", "8-BIT",]:
         return name.replace("-", "") 
+    else:
+        return name
 
 def read_json(filename="battlelog.json"):
     try:

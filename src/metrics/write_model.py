@@ -25,55 +25,63 @@ conn = psycopg2.connect(
 query = """
 SELECT * 
 FROM (
-	SELECT
-	    brawler,
-	    map,
-	    wins,
-	    losses,
-	    (wins + losses) AS total_matches,
-	    (wins::FLOAT / (wins + losses)) * 100 AS win_rate,
-	    (wins + losses)::FLOAT / (SELECT COUNT(*) * 6 FROM battles) * 100 AS usage_rate
-	FROM (
-	    SELECT
-	        brawler,
+	WITH winners AS (
+	    SELECT 
 	        map,
-	        SUM(CASE WHEN result = 'Victory' THEN 1 ELSE 0 END) AS wins,
-	        SUM(CASE WHEN result = 'Defeat' THEN 1 ELSE 0 END) AS losses
-	    FROM (
-	        SELECT
-	            id,
-	            timestamp,
-	            map,
-	            mode,
-	            avg_rank,
-	            unnest(string_to_array(wTeam, '-')) AS brawler,
-	            result
-	        FROM battles
-	        WHERE avg_rank > 12
-	        UNION ALL
-	        SELECT
-	            id,
-	            timestamp,
-	            map,
-	            mode,
-	            avg_rank,
-	            unnest(string_to_array(lTeam, '-')) AS brawler,
-	            result
-	        FROM battles
-	        WHERE avg_rank > 12
-	    ) AS brawlers
-	    GROUP BY brawler, map
-	) AS brawler_stats
-	ORDER BY win_rate DESC
+	        unnest(string_to_array(replace(wTeam, ' & ', '-'), '-')) AS brawler
+	    FROM battles
+	),
+	losers AS (
+	    SELECT 
+	        map,
+	        unnest(string_to_array(replace(lTeam, ' & ', '-'), '-')) AS brawler
+	    FROM battles
+	),
+	brawler_stats AS (
+	    -- Winning brawlers get win flag 1; losing brawlers get 0
+	    SELECT map, brawler, 1 AS win
+	    FROM winners
+	    UNION ALL
+	    SELECT map, brawler, 0 AS win
+	    FROM losers
+	),
+	map_games AS (
+	    -- Total games per map
+	    SELECT map, COUNT(*) AS total_games
+	    FROM battles
+	    GROUP BY map
+	)
+	SELECT 
+	    bs.map,
+	    bs.brawler,
+	    COUNT(*) AS games,
+	    SUM(bs.win) AS total_wins,
+	    COUNT(*) - SUM(bs.win) AS total_losses,
+	    ROUND(SUM(bs.win)::numeric / COUNT(*) * 100, 2) AS win_rate,  -- win rate percentage
+	    ROUND(COUNT(*)::numeric / mg.total_games * 100, 2) AS use_rate   -- use rate percentage
+	FROM brawler_stats bs
+	JOIN map_games mg ON bs.map = mg.map
+	GROUP BY bs.map, bs.brawler, mg.total_games
 )
-WHERE total_matches > 150
+WHERE games > 150
+ORDER BY win_rate DESC;
 """
-
 df = pd.read_sql_query(query, conn)
 
-# Step 3: Compute the Bayesian Adjusted Win Rate using a Beta(1,1) prior
+print("df Retrieved")
+
+df = df.where(df['brawler'] != 'None')
+
+
+
+# Step 3: Bayesian Mean (Empirical Bayes)
 # The formula is: (wins + 1) / (total_matches + 2) * 100
-df['adj_win_rate'] = (df['wins'] + 1) / (df['total_matches'] + 2) * 100
+global_win_rate = df['total_wins'].sum() / df['games'].sum()
+k = 10  # A tuning parameter (higher = stronger prior influence)
+df['adj_win_rate'] = ((df['total_wins'] + k * global_win_rate) / 
+                      (df['games'] + k)) * 100
+
+
 
 # (Optional) You can still compute normalized win_rate/usage_rate if needed,
 # but for TOPSIS we will work directly on the adjusted metrics.
@@ -86,12 +94,12 @@ df['adj_win_rate'] = (df['wins'] + 1) / (df['total_matches'] + 2) * 100
 # 2. Usage rate (the higher the better; indicates reliability)
 
 # Define the weights for each criterion:
-win_rate_weight = 0.5
-usage_rate_weight = 0.5
+win_rate_weight = 0.7
+usage_rate_weight = 0.3
 
 # Build the decision matrix using the two criteria:
 # Note: Make sure to use the adjusted win rate!
-decision_matrix = df[['adj_win_rate', 'usage_rate']].to_numpy()
+decision_matrix = df[['adj_win_rate', 'use_rate']].to_numpy()
 
 # Normalize the decision matrix using Euclidean norm (vector normalization)
 norm_matrix = decision_matrix / np.sqrt((decision_matrix ** 2).sum(axis=0))
@@ -116,10 +124,12 @@ df['topsis_score'] = distance_worst / (distance_best + distance_worst)
 df_sorted = df.sort_values(by='topsis_score', ascending=False)
 
 # Print the ranked brawlers for each map along with key metrics
-print(df_sorted[['map', 'brawler', 'topsis_score', 'adj_win_rate', 'usage_rate']])
+print(df_sorted[['map', 'brawler', 'topsis_score', 'adj_win_rate', 'use_rate']])
 
 # Optionally, save the sorted DataFrame
-df_sorted.to_pickle('./data/model/rankedstats_permaps_topsis2.pkl')
+df_sorted.to_pickle('./data/model/metrics-above-mythic.pkl')
+
+df_sorted.to_csv('./data/model/metrics-above-mythic.csv', index=False)
 
 # Close the database connection
 conn.close()

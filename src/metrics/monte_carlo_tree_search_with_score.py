@@ -9,7 +9,6 @@ import numpy as np
 sys.path.append(os.getcwd())
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
-
 # Update Brawler class to include the pre-calculated score
 class Brawler:
     def __init__(self, name, win_rate, usage_rate, score, map_name):
@@ -26,19 +25,25 @@ class Brawler:
         return hash(self.name)
 
 class DraftState:
-    def __init__(self, available_brawlers, team, opponent_team, map_name):
+    def __init__(self, available_brawlers, team, opponent_team, map_name, excluded_brawlers, firstPickTeam):
         self.available_brawlers = available_brawlers
         self.team = team            # Team A (your team)
         self.opponent_team = opponent_team  # Team B (opponent)
         self.map_name = map_name
+        self.excluded_brawlers = excluded_brawlers
+        self.firstPickTeam = firstPickTeam
 
     def current_turn(self):
-        # If total picks so far is even, it’s team A’s turn; if odd, team B’s turn.
+        # Determine the current turn based on the first pick team and the total number of picks
         total_picks = len(self.team) + len(self.opponent_team)
-        return 'team' if total_picks % 2 == 0 else 'opponent'
+        if self.firstPickTeam == "A":
+            return 'team' if total_picks % 2 == 0 else 'opponent'
+        else:
+            return 'opponent' if total_picks % 2 == 0 else 'team'
 
     def get_legal_actions(self):
-        return self.available_brawlers
+        # Exclude brawlers that are in the excluded list or already in the teams
+        return [b for b in self.available_brawlers if b.name not in self.excluded_brawlers and b not in self.team and b not in self.opponent_team]
 
     def take_action(self, brawler):
         # Determine which team is picking based on turn order.
@@ -49,7 +54,7 @@ class DraftState:
             new_team = self.team
             new_opponent_team = self.opponent_team + [brawler]
         new_available_brawlers = [b for b in self.available_brawlers if b != brawler]
-        return DraftState(new_available_brawlers, new_team, new_opponent_team, self.map_name)
+        return DraftState(new_available_brawlers, new_team, new_opponent_team, self.map_name, self.excluded_brawlers, self.firstPickTeam)
 
     def is_terminal(self):
         # Terminal state when both teams have 3 brawlers.
@@ -114,6 +119,7 @@ def simulate(state):
         if not possible_actions:
             break
         action = random.choice(possible_actions)
+        # print(f"Simulating action: {action.name}")
         current_state = current_state.take_action(action)
     return current_state.get_reward()
 

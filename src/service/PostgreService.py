@@ -55,9 +55,9 @@ class PostgreService():
             # print(f"Error inserting data: {e}")
 
 
-    def insert_battle_stats(self, id, timestamp, map, mode, avg_rank, wTeam, lTeam, result):
+    def insert_battle_stats(self, id, timestamp, map, mode, avg_rank, wTeam, lTeam, insert_date):
         insert_query = """
-        INSERT INTO battles (id, timestamp, map, mode, avg_rank, wTeam, lTeam, result)
+        INSERT INTO battles (id, timestamp, map, mode, avg_rank, wTeam, lTeam, insert_date)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
         """
         try:
@@ -65,10 +65,10 @@ class PostgreService():
                 return "Database connection is not established"
 
             self.cursor.execute(insert_query, (
-                id, timestamp, map, mode, avg_rank, wTeam, lTeam, result
+                id, timestamp, map, mode, avg_rank, wTeam, lTeam, insert_date
             ))
             self.conn.commit()
-            # print(f"Successfully inserted battle stats with id: {id}")
+            # print(f"Successfully inserted battle stats : {id} {timestamp} {map} {mode} {avg_rank} {wTeam} {lTeam} {insert_date}")
         except psycopg2.Error as e:
             self.conn.rollback()
             # print(f"Error inserting data: {e}")
@@ -86,6 +86,21 @@ class PostgreService():
         except psycopg2.Error as e:
             print(f"Error retrieving data: {e}")
             return []
+        
+
+    def get_all_battles(self):
+        select_query = "SELECT * FROM battles;"
+        try:
+            if self.cursor is None or self.conn is None:
+                return "Database connection is not established"
+
+            self.cursor.execute(select_query)
+            players = self.cursor.fetchall()
+            column_names = [desc[0] for desc in self.cursor.description]
+            return players, column_names
+        except psycopg2.Error as e:
+            print(f"Error retrieving data: {e}")
+            return [], []
     
     def get_all_players_from_rank(self, rank, mode):
         if mode not in ["below", "above"]:

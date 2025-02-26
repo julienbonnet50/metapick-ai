@@ -14,7 +14,7 @@ appConfig = AppConfig.AppConfig()
 
 postgreService = PostgreService.PostgreService(appConfig=appConfig)
 
-brawlerData = battlesUtils.read_json("data/brawlers.json")
+brawlerData = battlesUtils.read_json("data/brawlersMaps.json")
 brawler_map = {brawler['id']: brawler for brawler in brawlerData['brawlers']}
 max_threads = 20
 
