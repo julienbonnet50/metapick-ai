@@ -1,0 +1,21 @@
+.brawler-image {
+    width: 50px; /* Set fixed width */
+    height: 50px; /* Set fixed height */
+    object-fit: cover; /* Maintain aspect ratio and cover the fixed dimensions */
+}
+
+.map-image {
+    width: 300px; /* Adjust the width as needed */
+    height: auto;
+    margin-right: 20px; /* Add some space between the image and the table */
+}
+
+.map-info {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.top15-brawlers table {
+    margin-left: 0; /* Align the table to the left */
+}

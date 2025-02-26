@@ -1,0 +1,10 @@
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .gallery img {
+        width: 100%;
+    }
+
+    .category-title {
+        font-size: 2em;
+    }
+}
