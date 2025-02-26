@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS battles (
     avg_rank FLOAT,
     wTeam TEXT,
     lTeam TEXT,
-    result VARCHAR(255)
+    insert_date VARCHAR(255)
 );
 
 
