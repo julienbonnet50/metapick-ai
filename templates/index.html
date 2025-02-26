@@ -51,10 +51,46 @@
                     {% endfor %}
                 </select>
             </div>
+            <div class="form-group">
+                <label for="firstpick">First Pick</label>
+                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                    <label class="btn btn-primary active">
+                        <input type="radio" name="firstpick" id="A" value="A" autocomplete="off" checked> Team A
+                    </label>
+                    <label class="btn btn-danger">
+                        <input type="radio" name="firstpick" id="B" value="B" autocomplete="off"> Team B
+                    </label>
+                </div>
+            </div>
             <button type="submit" class="btn btn-primary btn-block">Simulate Draft</button>
         </form>
         <div id="result" class="mt-4"></div>
-        <div id="top15Brawlers" class="top15-brawlers mt-4"></div>
+        
+        <!-- Tab Content -->
+        <div class="tab-content" id="resultsTabContent">
+            <!-- Top 15 Brawlers Tab -->
+            <div class="tab-pane fade show active" id="top15" role="tabpanel" aria-labelledby="top15-tab">
+                <div id="top15Brawlers" class="top15-brawlers mt-4"></div>
+            </div>
+    
+            <!-- Draft Results Tab -->
+            <div class="tab-pane fade" id="draft-results" role="tabpanel" aria-labelledby="draft-results-tab">
+                <div id="top-brawlers" class="mt-4">
+                    <h2>Top Brawlers</h2>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Brawler</th>
+                                <th>Score</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top-brawlers-body">
+                            <!-- Rows will be dynamically added here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Hidden element to store the brawlers array -->
@@ -71,99 +107,139 @@
     <script>
         // Retrieve the brawlers array from the hidden HTML element
         var brawlersData = document.getElementById('brawlers-data').textContent;
-        var brawlers = JSON.parse(brawlersData);
+        var brawlers = JSON.parse(brawlersData).sort((a, b) => a[0].localeCompare(b[0]));
 
         var mapsData = document.getElementById('maps-data').textContent;
-        var maps = JSON.parse(mapsData)
-        console.log('brawler array:', brawlers); // Log the brawlers array to verify it's correctly embedded
+        var maps = JSON.parse(mapsData).sort((a, b) => a[0].localeCompare(b[0]));
 
         $(document).ready(function() {
-            $('.select2').select2({
-                templateResult: formatBrawler,
-                templateSelection: formatBrawlerSelection
-            });
+        // Initialize Select2
+        $('.select2').select2({
+            templateResult: formatBrawler,
+            templateSelection: formatBrawlerSelection
+        });
 
-            function formatBrawler(brawler) {
-                if (!brawler.id) {
-                    return brawler.text;
-                }
-                var brawlerData = brawlers.find(b => b[0] === brawler.text);
-                if (!brawlerData) {
-                    return brawler.text;
-                }
-                var $brawler = $(
-                    '<span class="brawler-item"><img src="' + brawlerData[1] + '" class="brawler-image" alt="' + brawler.text + '"> ' + brawler.text + '</span>'
-                );
-                return $brawler;
-            }
-
-            function formatBrawlerSelection(brawler) {
+        function formatBrawler(brawler) {
+            if (!brawler.id) {
                 return brawler.text;
             }
+            var brawlerData = brawlers.find(b => b[0] === brawler.text);
+            if (!brawlerData) {
+                return brawler.text;
+            }
+            var $brawler = $(
+                '<span class="brawler-item"><img src="' + brawlerData[1] + '" class="brawler-image" alt="' + brawler.text + '"> ' + brawler.text + '</span>'
+            );
+            return $brawler;
+        }
 
-            $('#draftForm').on('submit', function(event) {
-                event.preventDefault();
-                $.ajax({
-                    url: '/simulate_draft',
-                    method: 'POST',
-                    data: $(this).serialize(),
-                    success: function(response) {
-                        $('#result').html('<pre>' + JSON.stringify(response, null, 2) + '</pre>');
-                    },
-                    error: function(xhr, status, error) {
-                        $('#result').html('<div class="alert alert-danger">' + xhr.responseJSON.error + '</div>');
-                    }
-                });
-            });
+        function formatBrawlerSelection(brawler) {
+            return brawler.text;
+        }
 
-            $('#map').on('change', function() {
-                function extractValuesBetweenQuotes(str) {
-                    // Regex to match any string value between single quotes
-                    var regex = /'([^']*)'/g;
-                    var matches = [];
-                    var match;
+        // Handle form submission
+        $('#draftForm').on('submit', function(event) {
+            event.preventDefault();
+            // console.log('Excluded Brawlers:', $('#excluded_brawlers').val());
+            // console.log('Initial Team:', $('#initial_team').val());
+            // console.log('Initial Opponent:', $('#initial_opponent').val());
+            // console.log($(this).serialize()); // Log the serialized data
 
-                    // Use a loop to find all matches
-                    while ((match = regex.exec(str)) !== null) {
-                        matches.push(match[1]);
-                    }
+            function extractValuesBetweenQuotes(str) {
+                var regex = /'([^']*)'/g;
+                var matches = [];
+                var match;
 
-                    return matches;
+                while ((match = regex.exec(str)) !== null) {
+                    matches.push(match[1]);
                 }
 
-                var mapObject = $(this).val();
-                var extractedValues = extractValuesBetweenQuotes(mapObject);
+                return matches;
+            }
+        
+            var formValue = $(this).serialize();
+            const params = new URLSearchParams(formValue);
+            var obj = {};
+            params.forEach((value, key) => {
+                obj[key] = decodeURIComponent(value);
+            });
 
-                mapName = extractedValues[0]
-                mapPath = extractedValues[1]
+            console.log("Sumbit form : ", obj);
+            var map = obj['map'];
 
-                console.log("map Name ", mapName)
-                console.log("map Path ", mapPath)
+            var extractedValues = extractValuesBetweenQuotes(map);
 
-                var mapData = maps.find(m => m[0] === mapName);
-                console.log("Map find : ", mapData);
-                $.ajax({
-                    url: '/get_top15_brawlers',
-                    method: 'POST',
-                    data: { map: mapName },
-                    success: function(response) {
-                        console.log('Response:', response); // Log the response data
-                        var top15Table = '<div class="map-info"><img src="static/docs/assets/maps/' + mapData[1] + '" class="map-image" alt="' + mapName + '">';
-                        top15Table += '<div><h3>Top 15 Brawlers for ' + mapName + '</h3><table class="table"><thead><tr><th>Brawler</th><th>Image</th><th>Score</th></tr></thead><tbody>';
-                        response.forEach(function(brawler) {
-                            console.log('Processing brawler:', brawler); // Log each brawler being processed
-                            top15Table += '<tr><td>' + brawler[0][0] + '</td><td><img src="' + brawler[1] + '" class="brawler-image" alt="' + brawler[0][0] + '"></td><td>' + brawler[0][1] + '</td></tr>';
-                        });
-                        top15Table += '</tbody></table></div></div>';
-                        $('#top15Brawlers').html(top15Table);
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error:', xhr.responseJSON.error); // Log the error
-                        $('#top15Brawlers').html('<div class="alert alert-danger">' + xhr.responseJSON.error + '</div>');
-                    }
+            var mapName = extractedValues[0];
+            var mapPath = extractedValues[1];
+
+            var mapData = maps.find(m => m[0] === mapName);
+            // console.log("Map find : ", mapData);
+
+            $.ajax({
+                url: '/simulate_draft',
+                method: 'POST',
+                data:  $(this).serialize(),
+                success: function(response) {
+                    // console.log("Response : ", response);
+                    var top15Table = '<div class="map-info"><img src="static/docs/assets/maps/' + mapData[1] + '" class="map-image" alt="' + mapName + '">';
+                    top15Table += '<div><h3>Top 15 Brawlers for ' + mapName + '</h3><table class="table"><thead><tr><th>Brawler</th><th>Image</th><th>Score</th></tr></thead><tbody>';
+                    response.forEach(function(brawler) {
+                        top15Table += '<tr><td>' + brawler[0][0] + '</td><td><img src="' + brawler[1] + '" class="brawler-image" alt="' + brawler[0][0] + '"></td><td>' + brawler[0][1] + '</td></tr>';
+                    });
+                    top15Table += '</tbody></table></div></div>';
+                    $('#top15Brawlers').html(top15Table);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', xhr.responseJSON.error); // Log the error
+                    $('#top15Brawlers').html('<div class="alert alert-danger">' + xhr.responseJSON.error + '</div>');
+                }
                 });
+        });
+
+        // Handle map change
+        $('#map').on('change', function() {
+            function extractValuesBetweenQuotes(str) {
+                var regex = /'([^']*)'/g;
+                var matches = [];
+                var match;
+
+                while ((match = regex.exec(str)) !== null) {
+                    matches.push(match[1]);
+                }
+
+                return matches;
+            }
+
+            var mapObject = $(this).val();
+            
+            var extractedValues = extractValuesBetweenQuotes(mapObject);
+
+            var mapName = extractedValues[0];
+            var mapPath = extractedValues[1];
+
+            var mapData = maps.find(m => m[0] === mapName);
+            console.log("Map find : ", mapData);
+
+            $.ajax({
+                url: '/get_top15_brawlers',
+                method: 'POST',
+                data: { map: mapName },
+                success: function(response) {
+                    var top15Table = '<div class="map-info"><img src="static/docs/assets/maps/' + mapData[1] + '" class="map-image" alt="' + mapName + '">';
+                    top15Table += '<div><h3>Top 15 Brawlers for ' + mapName + '</h3><table class="table"><thead><tr><th>Brawler</th><th>Image</th><th>Score</th></tr></thead><tbody>';
+                    response.forEach(function(brawler) {
+                        top15Table += '<tr><td>' + brawler[0][0] + '</td><td><img src="' + brawler[1] + '" class="brawler-image" alt="' + brawler[0][0] + '"></td><td>' + brawler[0][1] + '</td></tr>';
+                    });
+                    top15Table += '</tbody></table></div></div>';
+                    $('#top15Brawlers').html(top15Table);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', xhr.responseJSON.error); // Log the error
+                    $('#top15Brawlers').html('<div class="alert alert-danger">' + xhr.responseJSON.error + '</div>');
+                }
             });
         });
+    });
     </script>
 </body>
 </html>
