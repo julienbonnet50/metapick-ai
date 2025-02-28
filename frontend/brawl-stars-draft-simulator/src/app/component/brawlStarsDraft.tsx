@@ -195,8 +195,12 @@ const BrawlStarsDraft = () => {
     brawler.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const clearSearch = () => {
+    setSearchTerm("");
+  };
+
   return (
-    <div className="container mx-auto p-4 max-w-full px-12">
+    <div className="container mx-auto p-4 max-w-full px-48">
       <h1 className="text-5xl font-bold text-center mb-8">Brawl Stars Draft Simulator</h1>
 
       {/* Map Selection */}
@@ -371,14 +375,23 @@ const BrawlStarsDraft = () => {
       </div>
 
       {/* Search bar */}
-      <div className="mb-8">
+      <div className="mb-8 relative">
         <input
           type="text"
           placeholder="Search brawlers..."
-          className="input input-bordered w-full max-w-xs"
+          className="input input-bordered w-full max-w-xs pr-10"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
+        {/* Clear Button */}
+        {searchTerm && (
+          <button
+            onClick={clearSearch}
+            className="absolute top-1/2 left-72 transform -translate-y-1/2 text-3xl"
+          >
+            &times;
+          </button>
+        )}
       </div>
 
       {/* Brawlers Grid */}
