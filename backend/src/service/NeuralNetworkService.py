@@ -61,7 +61,7 @@ class NeuralNetworkService:
             df = self.prepare_dataset(df, num_friends=3, num_enemies=3, pad_idx=0)
             self.brawler_to_idx, self.map_to_idx = self.build_mappings(df)
             self.dataset = BattleDataset(df, self.brawler_to_idx, self.map_to_idx)
-            self.save_mappings_and_dataset()
+            self.save_mappings()
     
     def fetch_battle_data(self):
         conn = psycopg2.connect(
@@ -93,11 +93,10 @@ class NeuralNetworkService:
         map_to_idx = {m: i for i, m in enumerate(sorted(df['map'].dropna().unique()))}
         return brawler_to_idx, map_to_idx
     
-    def save_mappings_and_dataset(self):
-        data = {
+    def save_mappings(self):
+        dataMappings = {
             "brawler_to_idx": self.brawler_to_idx,
             "map_to_idx": self.map_to_idx,
-            "dataset_samples": self.dataset.samples
         }
         # Ensure the directory exists
         directory = os.path.dirname(self.data_path)
@@ -105,7 +104,7 @@ class NeuralNetworkService:
             os.makedirs(directory)
 
         with open(self.data_path, "wb") as f:
-            pickle.dump(data, f)
+            pickle.dump(dataMappings, f)
     
     def load_model(self, num_friends=3, num_enemies=3):
         print("Loading model...")
