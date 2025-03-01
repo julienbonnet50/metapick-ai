@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { fetchBrawlers, fetchMaps } from "../utils/api";
 import brawlerMaps from "../data/brawlersMaps.json"; // Import the maps
 
-const BASE_URL = process.env.REACT_APP_ENDPOINT_BASE_URL || "http://127.0.0.1:10000";
+const BASE_URL = process.env.REACT_APP_ENDPOINT_BASE_URL || "https://metapick-ai.onrender.com";
 
 // Define the Brawler type
 interface Brawler {
