@@ -14,8 +14,8 @@ from backend.src.service import NeuralNetworkService
 
 appConfig = AppConfig()
 version = "35_1"
-neuralNetworkService = NeuralNetworkService.NeuralNetworkService(data_path=f"./data/model/version_{version}/data_all.pkl", 
-                                                                 model_path=f"./data/model/version_{version}/nn_model_all.pth", 
+neuralNetworkService = NeuralNetworkService.NeuralNetworkService(data_path=f"./backend/src/data/model/version_{version}/mappings.pkl", 
+                                                                 model_path=f"./backend/src/data/model/version_{version}/nn_model_all.pth", 
                                                                  version=version,
                                                                  appConfig=appConfig)
 

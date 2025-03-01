@@ -48,13 +48,10 @@ class NeuralNetworkService:
     
     def load_data(self):
         if os.path.exists(self.data_path):
-            print("Loading data from file...")
+            print("Loading mappings from file...")
             with open(self.data_path, "rb") as f:
                 data = pickle.load(f)
-            self.brawler_to_idx = data["brawler_to_idx"]
-            self.map_to_idx = data["map_to_idx"]
-            self.dataset = BattleDataset.__new__(BattleDataset)
-            self.dataset.samples = data["dataset_samples"]
+            self.load_mappings(self.data_path)
         else:
             print("Loading data from SQL...")
             df = self.fetch_battle_data()
@@ -93,17 +90,30 @@ class NeuralNetworkService:
         map_to_idx = {m: i for i, m in enumerate(sorted(df['map'].dropna().unique()))}
         return brawler_to_idx, map_to_idx
     
-    def save_mappings(self):
+    def load_mappings(self, path):
+        # Check if the file exists before attempting to load
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"The file at {path} does not exist.")
+
+        with open(path, "rb") as f:
+            dataMappings = pickle.load(f)
+
+        print("Loaded mappings from file...")
+        # Assuming the loaded dictionary has the same structure
+        self.brawler_to_idx = dataMappings.get("brawler_to_idx")
+        self.map_to_idx = dataMappings.get("map_to_idx")
+
+    def save_mappings(self, path):
         dataMappings = {
             "brawler_to_idx": self.brawler_to_idx,
             "map_to_idx": self.map_to_idx,
         }
         # Ensure the directory exists
-        directory = os.path.dirname(self.data_path)
+        directory = os.path.dirname(path)
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-        with open(self.data_path, "wb") as f:
+        with open(path, "wb") as f:
             pickle.dump(dataMappings, f)
     
     def load_model(self, num_friends=3, num_enemies=3):
@@ -177,7 +187,6 @@ class NeuralNetworkService:
         torch.save(self.model.state_dict(), self.model_path)
         print("Training complete. Model saved.")
 
-    
     def predict_best_brawler(self, friends, enemies, map_name, excluded=[]):
         self.model.eval()
         pad_idx = self.model.pad_idx
@@ -216,3 +225,4 @@ class NeuralNetworkService:
         
         # Return top-k brawlers with their probabilities
         return [(self.idx_to_brawler(idx), prob) for idx, prob in zip(topk.indices.squeeze(0).tolist(), topk.values.squeeze(0).tolist())]
+

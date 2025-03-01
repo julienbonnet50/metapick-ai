@@ -19,10 +19,9 @@ app = Flask(__name__)
 # Replace '*' by my dns
 CORS(app, resources={r"/*": {"origins": "*"}})
 appConfig = AppConfig()
-version = "35_1"
-neuralNetworkService = NeuralNetworkService.NeuralNetworkService(data_path=f"./data/model/version_{version}/data_all.pkl", 
-                                                                 model_path=f"./data/model/version_{version}/nn_model_all.pth", 
-                                                                 version=version,
+neuralNetworkService = NeuralNetworkService.NeuralNetworkService(data_path=f"./backend/src/data/model/version_{appConfig.game_version}/mappings.pkl", 
+                                                                 model_path=f"./backend/src/data/model/version_{appConfig.game_version}/nn_model_all.pth", 
+                                                                 version=appConfig.game_version,
                                                                  appConfig=appConfig)
 
 @app.route('/')
@@ -88,4 +87,4 @@ def simulate_draft():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=appConfig.port)
