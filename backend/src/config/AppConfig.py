@@ -1,7 +1,7 @@
 import json
 import os
 from dotenv import load_dotenv
-from src.utils.battlesUtils import read_json
+from src.utils.jsonUtils import read_json
 
 class AppConfig:
     def __init__(self):
