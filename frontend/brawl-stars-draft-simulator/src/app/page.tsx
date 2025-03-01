@@ -1,5 +1,5 @@
 import React from "react";
-import BrawlStarsDraft from "./component/BrawlStarsDraft";
+import BrawlStarsDraft from "@components/BrawlStarsDraft";
 
 function App() {
   return (
