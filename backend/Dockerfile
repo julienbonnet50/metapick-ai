@@ -20,7 +20,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . /src/
 
 # Expose the port your Flask app will run on
-EXPOSE 5000
+EXPOSE 10000
 
-# Command to run the Flask app
-CMD ["python", "app.py"]
+# Command to run the Flask app using Gunicorn on port 10000
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:10000", "app:app"]

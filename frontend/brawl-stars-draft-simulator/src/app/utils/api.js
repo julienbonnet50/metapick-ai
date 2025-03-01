@@ -1,9 +1,9 @@
-export const fetchBrawlers = async () => {
-    const response = await fetch("http://127.0.0.1:5000/get_brawlers", { cache: "no-store" });
+export const fetchBrawlers = async (BASE_URL) => {
+    const response = await fetch(`${BASE_URL}/get_brawlers`, { cache: "no-store" });
     return response.json();
   };
   
-  export const fetchMaps = async () => {
-    const response = await fetch("http://127.0.0.1:5000/get_maps", { cache: "no-store" });
+  export const fetchMaps = async (BASE_URL) => {
+    const response = await fetch(`${BASE_URL}/get_maps`, { cache: "no-store" });
     return response.json();
   };

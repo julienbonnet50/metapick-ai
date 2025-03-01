@@ -12,6 +12,10 @@ from flask_cors import CORS
 from src.config.AppConfig import AppConfig
 from src.service import NeuralNetworkService
 
+import os
+
+# Get the absolute path to the project root directory
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(__name__)
 
@@ -21,8 +25,22 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 appConfig = AppConfig()
 
-neuralNetworkService = NeuralNetworkService.NeuralNetworkService(data_path=f"./data/model/version_{appConfig.game_version}/mappings.pkl", 
-                                                                 model_path=f"./data/model/version_{appConfig.game_version}/nn_model_all.pth", 
+
+# Construct the correct paths using BASE_DIR
+data_path = os.path.join(BASE_DIR, "data", "model", f"version_{appConfig.game_version}", "mappings.pkl")
+model_path = os.path.join(BASE_DIR, "data", "model", f"version_{appConfig.game_version}", "nn_model_all.pth")
+
+# Check if files exist (debugging)
+if not os.path.exists(data_path):
+    raise FileNotFoundError(f"Data file not found: {data_path}")
+if not os.path.exists(model_path):
+    raise FileNotFoundError(f"Model file not found: {model_path}")
+
+print("All required files found!")
+
+
+neuralNetworkService = NeuralNetworkService.NeuralNetworkService(data_path=data_path, 
+                                                                 model_path=model_path, 
                                                                  version=appConfig.game_version,
                                                                  appConfig=appConfig)
 

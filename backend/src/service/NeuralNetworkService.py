@@ -47,6 +47,7 @@ class NeuralNetworkService:
         return df
     
     def load_data(self):
+        print(f"Loading data... at path : {self.data_path}")
         if os.path.exists(self.data_path):
             print("Loading mappings from file...")
             with open(self.data_path, "rb") as f:

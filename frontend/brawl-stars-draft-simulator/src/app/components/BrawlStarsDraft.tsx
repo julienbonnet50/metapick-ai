@@ -4,6 +4,8 @@ import Image from 'next/image';
 import { fetchBrawlers, fetchMaps } from "../utils/api";
 import brawlerMaps from "../data/brawlersMaps.json"; // Import the maps
 
+const BASE_URL = process.env.REACT_APP_ENDPOINT_BASE_URL || "http://127.0.0.1:10000";
+
 // Define the Brawler type
 interface Brawler {
   id: number;
@@ -36,8 +38,8 @@ const BrawlStarsDraft = () => {
   // Fetch data on component mount
   useEffect(() => {
     const loadData = async () => {
-      const brawlersData = await fetchBrawlers();
-      const mapsData = await fetchMaps();
+      const brawlersData = await fetchBrawlers(BASE_URL);
+      const mapsData = await fetchMaps(BASE_URL);
 
       // Sort brawlers by name
       const sortedBrawlers = brawlersData.sort((a: Brawler, b: Brawler) => a.name.localeCompare(b.name));
@@ -135,7 +137,7 @@ const BrawlStarsDraft = () => {
     console.log("Send draft data", JSON.stringify(draftData));
 
     try {
-      const response = await fetch("http://127.0.0.1:5000/simulate_draft", {
+      const response = await fetch(`${BASE_URL}/simulate_draft`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

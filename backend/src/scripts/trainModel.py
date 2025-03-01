@@ -10,7 +10,7 @@ appConfig = AppConfig.AppConfig()
 
 version = "35_1"
 
-neuralNetworkService = NeuralNetworkService.NeuralNetworkService(data_path=f"./data/model/version_{version}/data_all.pkl", 
+neuralNetworkService = NeuralNetworkService.NeuralNetworkService(data_path=f"data/model/version_{version}/data_all.pkl", 
                                                                  model_path=f"./data/model/version_{version}/nn_model_all.pth", 
                                                                  version=version,
                                                                  appConfig=appConfig)
