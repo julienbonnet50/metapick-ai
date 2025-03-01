@@ -238,6 +238,8 @@ const BrawlStarsDraft = () => {
                   <Image 
                     src={brawler.imageUrl}
                     alt={brawler.name}
+                    width={40}
+                    height={40}
                     className="w-10 h-10 object-cover rounded-full mr-2"
                   />
                   <span className="badge badge-error">{brawler.name}</span>
@@ -290,6 +292,8 @@ const BrawlStarsDraft = () => {
                 <Image 
                   src={`/assets/maps/${currentMapImage}`} // Adjust the path as needed
                   alt={selectedMap}
+                  width={256}
+                  height={384}
                   className="w-64 h-96 mx-auto"
                 />
                 {/* Team A */}
@@ -301,6 +305,8 @@ const BrawlStarsDraft = () => {
                         <Image 
                           src={brawler.imageUrl}
                           alt={brawler.name}
+                          width={40}
+                          height={40}
                           className="w-10 h-10 object-cover rounded-full"
                         />
                         <span className="badge text-s badge-primary whitespace-nowrap">{brawler.name}</span>
@@ -322,6 +328,8 @@ const BrawlStarsDraft = () => {
                     {teamB.map((brawler, index) => (
                       <div key={index} className="flex items-center gap-2">
                         <Image 
+                          width={40}
+                          height={40}
                           src={brawler.imageUrl}
                           alt={brawler.name}
                           className="w-10 h-10 object-cover rounded-full"
@@ -359,6 +367,8 @@ const BrawlStarsDraft = () => {
                   >
                     <figure className="px-3 pt-3">
                       <Image 
+                        width={64}
+                        height={64}
                         src={brawler.imageUrl}
                         alt={brawler.name}
                         className="w-16 h-16 object-cover rounded-full border-2 border-primary"
@@ -422,7 +432,9 @@ const BrawlStarsDraft = () => {
                 handleBrawlerClick(brawler, "B");
               }}
             >
-              <Image 
+              <Image
+                width={55}
+                height={55} 
                 src={brawler.imageUrl}
                 alt={brawler.name}
                 className="w-18 h-18"
