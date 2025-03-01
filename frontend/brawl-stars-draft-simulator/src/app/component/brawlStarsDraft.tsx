@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import Image from 'next/image';
 import { fetchBrawlers, fetchMaps } from "../utils/api";
 import brawlerMaps from "../data/brawlersMaps.json"; // Import the maps
 
@@ -17,7 +18,7 @@ interface SubmissionBrawler {
   imageUrl: string;
 }
 
-const safeToFixed = (value: any, decimals: number = 2) => {
+const safeToFixed = (value: number, decimals: number = 2) => {
   return typeof value === 'number' ? value.toFixed(decimals) : 'N/A';
 };
 
@@ -39,8 +40,8 @@ const BrawlStarsDraft = () => {
       const mapsData = await fetchMaps();
 
       // Sort brawlers by name
-      const sortedBrawlers = brawlersData.sort((a: any, b: any) => a.name.localeCompare(b.name));
-      const sortedMaps = mapsData.sort((a: any, b: any) => a.localeCompare(b));
+      const sortedBrawlers = brawlersData.sort((a: Brawler, b: Brawler) => a.name.localeCompare(b.name));
+      const sortedMaps = mapsData.sort((a: string, b: string) => a.localeCompare(b));
 
       setBrawlers(sortedBrawlers);
       setMaps(sortedMaps);
@@ -150,15 +151,22 @@ const BrawlStarsDraft = () => {
       const result = await response.json();
       console.log("Result : ", result);
 
-      // Transform the result into the expected format
-      const formattedResult = result.map((item: any) => ({
-        name: item[0][0],
-        score: item[0][1],
-        imageUrl: item[1],
+      interface FormattedItem {
+        name: string;
+        score: number;
+        imageUrl: string;
+      }
+      
+      // Assuming `result` is an array of tuples like `[[string, number], string]`
+      const formattedResult: FormattedItem[] = result.map(([info, imageUrl]: [[string, number], string]) => ({
+        name: info[0],
+        score: info[1],
+        imageUrl,
       }));
 
+      // Transform the result into the expected format
       setSubmissionResult(formattedResult);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error submitting draft:", error);
       setSubmissionResult(null);
     }
@@ -168,7 +176,7 @@ const BrawlStarsDraft = () => {
     if (selectedMap) {
       handleSubmit();
     }
-  }, [selectedMap, teamA, teamB, bannedBrawlers]); // Re-run handleSubmit when any of these change
+  }, [selectedMap, teamA, teamB, bannedBrawlers, handleSubmit]); // Re-run handleSubmit when any of these change
 
   // Reset the draft
   const handleReset = () => {
@@ -227,7 +235,7 @@ const BrawlStarsDraft = () => {
             <div className="flex flex-col gap-1">
               {bannedBrawlers.map((brawler, index) => (
                 <div key={index} className="flex items-center bg-base-300 p-2 rounded-lg">
-                  <img
+                  <Image 
                     src={brawler.imageUrl}
                     alt={brawler.name}
                     className="w-10 h-10 object-cover rounded-full mr-2"
@@ -279,7 +287,7 @@ const BrawlStarsDraft = () => {
           {selectedMap && (
             <div className="card bg-base-200 shadow-md p-4 text-center mb-8">
               <figure className="relative">
-                <img
+                <Image 
                   src={`/assets/maps/${currentMapImage}`} // Adjust the path as needed
                   alt={selectedMap}
                   className="w-64 h-96 mx-auto"
@@ -290,7 +298,7 @@ const BrawlStarsDraft = () => {
                   <div className="space-y-2">
                     {teamA.map((brawler, index) => (
                       <div key={index} className="flex items-center gap-2">
-                        <img
+                        <Image 
                           src={brawler.imageUrl}
                           alt={brawler.name}
                           className="w-10 h-10 object-cover rounded-full"
@@ -313,7 +321,7 @@ const BrawlStarsDraft = () => {
                   <div className="space-y-2">
                     {teamB.map((brawler, index) => (
                       <div key={index} className="flex items-center gap-2">
-                        <img
+                        <Image 
                           src={brawler.imageUrl}
                           alt={brawler.name}
                           className="w-10 h-10 object-cover rounded-full"
@@ -350,7 +358,7 @@ const BrawlStarsDraft = () => {
                     className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 transform hover:-translate-y-2"
                   >
                     <figure className="px-3 pt-3">
-                      <img
+                      <Image 
                         src={brawler.imageUrl}
                         alt={brawler.name}
                         className="w-16 h-16 object-cover rounded-full border-2 border-primary"
@@ -396,7 +404,7 @@ const BrawlStarsDraft = () => {
 
       {/* Brawlers Grid */}
       <div className="grid grid-cols-[repeat(24,1fr)] gap-1">
-        {filteredBrawlers.map((brawler: any) => {
+        {filteredBrawlers.map((brawler: Brawler) => {
           const status = getBrawlerStatus(brawler);
           let statusClass = "";
 
@@ -414,7 +422,7 @@ const BrawlStarsDraft = () => {
                 handleBrawlerClick(brawler, "B");
               }}
             >
-              <img
+              <Image 
                 src={brawler.imageUrl}
                 alt={brawler.name}
                 className="w-18 h-18"
