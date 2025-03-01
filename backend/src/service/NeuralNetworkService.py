@@ -11,7 +11,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 
-from backend.src.utils.modelUtils import BattleDataset, BrawlerPredictionModel
+from src.utils.modelUtils import BattleDataset, BrawlerPredictionModel
 
 class NeuralNetworkService:
     def __init__(self, appConfig=None, data_path="", model_path="", device=None, version="35", autoLoadEnable=True):

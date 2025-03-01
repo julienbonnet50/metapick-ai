@@ -9,16 +9,18 @@ from flask import Flask, jsonify, request, render_template, send_from_directory
 import pandas as pd
 from flask_cors import CORS
 
-from backend.src.config.AppConfig import AppConfig
-from backend.src.service import NeuralNetworkService
+from src.config.AppConfig import AppConfig
+from src.service import NeuralNetworkService
 
 
 app = Flask(__name__)
 
 # TODO: Remove for production
-# Replace '*' by my dns
+
+# Replace with : CORS(app, resources={r"/*": {"origins": "https://metapick-ai.vercel.app"}})
 CORS(app, resources={r"/*": {"origins": "*"}})
 appConfig = AppConfig()
+
 neuralNetworkService = NeuralNetworkService.NeuralNetworkService(data_path=f"./backend/src/data/model/version_{appConfig.game_version}/mappings.pkl", 
                                                                  model_path=f"./backend/src/data/model/version_{appConfig.game_version}/nn_model_all.pth", 
                                                                  version=appConfig.game_version,
