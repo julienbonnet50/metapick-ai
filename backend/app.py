@@ -21,8 +21,8 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 appConfig = AppConfig()
 
-neuralNetworkService = NeuralNetworkService.NeuralNetworkService(data_path=f"./backend/src/data/model/version_{appConfig.game_version}/mappings.pkl", 
-                                                                 model_path=f"./backend/src/data/model/version_{appConfig.game_version}/nn_model_all.pth", 
+neuralNetworkService = NeuralNetworkService.NeuralNetworkService(data_path=f"./data/model/version_{appConfig.game_version}/mappings.pkl", 
+                                                                 model_path=f"./data/model/version_{appConfig.game_version}/nn_model_all.pth", 
                                                                  version=appConfig.game_version,
                                                                  appConfig=appConfig)
 

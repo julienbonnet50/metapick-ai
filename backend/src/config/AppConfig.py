@@ -6,20 +6,18 @@ from src.utils.jsonUtils import read_json
 class AppConfig:
     def __init__(self):
         load_dotenv()
-        self.API_KEY = os.getenv("API_KEY")
-        self.POSTGRE_SQL_PASSWORD = os.getenv("POSTGRE_SQL_PASSWORD")
+        self.API_KEY = os.getenv("API_KEY", "")
+        self.POSTGRE_SQL_PASSWORD = os.getenv("POSTGRE_SQL_PASSWORD", "")
         self.BASE_URL = "https://api.brawlstars.com/v1"
         self.OWN_PLAYER_TAG =  os.getenv("OWN_PLAYER_TAG")
         self.version = read_json("data/game_version.json")
-        self.game_version = os.getenv("GAME_VERSION")
-        self.logs_level = int(os.getenv("LOGS_LEVEL"))
+        self.game_version = os.getenv("GAME_VERSION", "35_1")
+        self.logs_level = int(os.getenv("LOGS_LEVEL", "1"))
                 # Get the port from the environment variable (use a default if not available)
         self.port = int(os.environ.get("PORT", 10000))
-
         self.dataIndex = None
         self.dataVersion = None
         self.dataMaps = None
-
         self.initApp()
 
     def initApp(self):
