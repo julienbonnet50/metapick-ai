@@ -24,7 +24,7 @@ class AppConfig:
 
     def initApp(self):
         # Load data from JSON file
-        with open('./data/brawlersMaps.json', 'r') as file:
+        with open('data/brawlersMaps.json', 'r') as file:
             self.dataIndex = json.load(file)
 
         self.setBrawler()
