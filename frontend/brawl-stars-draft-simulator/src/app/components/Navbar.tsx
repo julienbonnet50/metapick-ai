@@ -12,6 +12,8 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
       <div className="container mx-auto flex justify-between items-center">
         {/* Logo */}
         <Image
+          width={40}
+          height={40}
           src="/web-app-manifest-192x192.png"  
           alt="Logo"
           className="h-10 mr-4" 
