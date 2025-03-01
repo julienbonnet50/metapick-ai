@@ -1,4 +1,5 @@
 import React from "react";
+import Image from 'next/image';
 
 interface NavbarProps {
   toggleHowToUse: () => void;
@@ -10,7 +11,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
     <nav className="bg-yellow-950 text-amber-50 p-4 shadow-md" style={{ fontFamily: 'Roboto, sans-serif' }}>
       <div className="container mx-auto flex justify-between items-center">
         {/* Logo */}
-        <img
+        <Image
           src="/web-app-manifest-192x192.png"  
           alt="Logo"
           className="h-10 mr-4" 
