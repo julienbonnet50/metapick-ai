@@ -5,6 +5,7 @@ import { fetchBrawlers, fetchMaps } from "../utils/api";
 import brawlerMaps from "../data/brawlersMaps.json"; // Import the maps
 
 const BASE_URL = process.env.REACT_APP_ENDPOINT_BASE_URL || "https://metapick-ai.onrender.com";
+console.log("BASE_URL", BASE_URL);
 
 // Define the Brawler type
 interface Brawler {
@@ -211,7 +212,6 @@ const BrawlStarsDraft = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-full px-48">
-      <h1 className="text-5xl font-bold text-center mb-8">Brawl Stars Draft Simulator</h1>
 
       {/* Map Selection */}
       <div className="form-control mb-8">
@@ -373,7 +373,7 @@ const BrawlStarsDraft = () => {
                         height={64}
                         src={brawler.imageUrl}
                         alt={brawler.name}
-                        className="w-16 h-16 object-cover rounded-full border-2 border-primary"
+                        className="w-16 h-16 object-cover rounded-full border-2 border-primary gap-1"
                       />
                     </figure>
                     <div className="card-body items-center text-center p-4">
@@ -415,10 +415,10 @@ const BrawlStarsDraft = () => {
       </div>
 
       {/* Brawlers Grid */}
-      <div className="grid grid-cols-[repeat(24,1fr)] gap-1">
+      <div className="grid grid-cols-[repeat(24,1fr)]">
         {filteredBrawlers.map((brawler: Brawler) => {
           const status = getBrawlerStatus(brawler);
-          let statusClass = "";
+          let statusClass = "border-2 border-transparent";
 
           if (status === "teamA") statusClass = "border-2 border-primary";
           else if (status === "teamB") statusClass = "border-2 border-secondary";

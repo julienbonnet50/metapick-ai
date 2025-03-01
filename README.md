@@ -1,5 +1,5 @@
 # Meta Pick AI
-
+![alt text](assets/image.png)
 ## Description
 Meta Pick AI is a web-based tool designed to help players improve their ranked gameplay by optimizing their draft picks. With a **Flask backend** powered by a **Neural Network trained on millions of games (using PyTorch)**, the system predicts the **top 10 best brawlers** to pick for a given map, considering ally picks, enemy picks, and bans. The frontend is built using **React, TailwindCSS, and DaisyUI** to ensure a smooth and user-friendly experience.
 
@@ -10,10 +10,13 @@ Meta Pick AI is a web-based tool designed to help players improve their ranked g
 - 🎨 **Modern UI**: Built with React, TailwindCSS, and DaisyUI for a sleek and responsive design.  
 
 ## Tech Stack
-- **Backend**: Flask (Python), PyTorch (Neural Network for predictions)  
+- **Backend**: Gunicorn + Flask (Python), PyTorch (Neural Network for predictions)  
 - **Frontend**: React, TailwindCSS, DaisyUI  
 - **Database**: PostgreSQL  
-- **Deployment**: WIP 
+- **Deployment**: Front-end with Vercel, Back-end with Render.
+
+
+**✅ Currently live at : https://metapick-ai.vercel.app ✅**
 
 ## Installation & Setup
 
