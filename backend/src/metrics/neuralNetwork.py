@@ -189,8 +189,8 @@ def load_mappings_and_dataset(path="data.pkl"):
 # Main Function to Run the Pipeline
 # -------------------------------
 def main():
-    data_path = "./data/model/data_all.pkl"  # File to store mappings and dataset
-    model_path = "./data/model/nn_model_all.pth"  # File to store trained model
+    data_path = "data/model/data_all.pkl"  # File to store mappings and dataset
+    model_path = "data/model/nn_model_all.pth"  # File to store trained model
 
     # Try loading saved mappings & dataset
     brawler_to_idx, map_to_idx, dataset_samples = load_mappings_and_dataset(data_path)

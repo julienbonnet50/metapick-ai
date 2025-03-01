@@ -169,16 +169,6 @@ def check_brawler_name(name):
     else:
         return name
 
-def read_json(filename="battlelog.json"):
-    try:
-        with open(filename, "r") as json_file:
-            data = json.load(json_file)
-        return data
-    except FileNotFoundError:
-        return {"error": "File not found"}
-    except json.JSONDecodeError:
-        return {"error": "Error decoding JSON"}
-
 def format_league_ranks(rank: int):
     # Min rank: 1, Max rank: 19
     leagues = ["Bronze", "Silver", "Gold", "Diamond", "Mythic", "Legendary", "Masters"]

@@ -14,7 +14,7 @@ class AppConfig:
         self.game_version = os.getenv("GAME_VERSION")
         self.logs_level = int(os.getenv("LOGS_LEVEL"))
                 # Get the port from the environment variable (use a default if not available)
-        self.port = int(os.environ.get("PORT", 5000))
+        self.port = int(os.environ.get("PORT", 10000))
 
         self.dataIndex = None
         self.dataVersion = None
