@@ -266,20 +266,24 @@ const BrawlStarsDraft = () => {
   // Determine win rate color and text based on the percentage
   const getWinRateColorClass = () => {
     if (winRate === null) return "";
-    if (winRate >= 60) return "text-success";
-    if (winRate >= 45) return "text-warning";
+    if (winRate >= 52) return "text-success";
+    if (winRate >= 48) return "text-warning";
     return "text-error";
   };
 
-const getWinRateText = () => {
-    if (winRate === null) return "Win rate unavailable";
+  const getWinRateText = () => {
+    if (winRate === null) return "Win rate data unavailable – focus on playing your best!";
+
+    if (winRate > 54) return "Dominant matchup – Strong advantage! Stay focused and capitalize on your lead.";
+    if (winRate > 52) return "Favorable matchup – Your team has the edge. Play confidently but stay sharp.";
+    if (winRate > 50.5) return "Slightly favorable – Small advantage. Stick to solid plays and avoid risks.";
+    if (winRate > 49.5) return "Balanced matchup – A close game ahead. Good teamwork will make the difference.";
+    if (winRate > 48) return "Even matchup – Could go either way. Adapt and play smart!";
+    if (winRate > 45) return "Slight disadvantage – Play carefully and look for opportunities to turn the tide.";
     
-    if (winRate > 54) return "Dominant matchup - Strong advantage";
-    if (winRate > 52) return "Favorable matchup - Your team has an edge";
-    if (winRate > 48) return "Even matchup - Could go either way";
-    if (winRate > 45) return "Slight disadvantage - Play carefully";
-    return "Unfavorable matchup - Tough battle ahead";
+    return "Challenging matchup – Tough battle ahead. Stay resilient and work with your team!";
 };
+
 
   return (
     <div className="container mx-auto p-4 max-w-full px-48">
