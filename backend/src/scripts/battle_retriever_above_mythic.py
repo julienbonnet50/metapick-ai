@@ -23,7 +23,6 @@ brawler_map = {brawler['id']: brawler for brawler in brawlerData['brawlers']}
 
 # Main
 players = postgreService.get_all_players_from_rank(15, "above")
-postgreService.create_battles_table_version("35_1")
 postgreService.create_battles_table_version(appConfig.game_version)
 
 total_players = len(players)

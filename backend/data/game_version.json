@@ -1,9 +1,43 @@
 [
     {
+        "version": "35_3",
+        "date": "2025-03-03",
+        "name": "s35",
+        "description": "good_randoms",
+        "count": 968984,
+        "ranked_maps": [
+            "Belle's Rock",
+            "Below Zero",
+            "Center Stage",
+            "Cool Box",
+            "Double Swoosh",
+            "Dueling Beetles",
+            "Flaring Phoenix",
+            "Hard Rock Mine",
+            "Open Business",
+            "Out in the Open",
+            "Parallel Plays",
+            "Pinball Dreams",
+            "Sneaky Fields",
+            "Super Center",
+            "Undermine",
+            "Shooting Star",
+            "Hideout",
+            "Layer Cake",
+            "Dry Season",
+            "Gem Fort",
+            "Triple Dribble",
+            "Ring of Fire",
+            "New Horizons",
+            "Starr Garden"
+        ]
+    },
+    {
         "version": "35_2",
         "date": "2025-02-28",
         "name": "s35",
         "description": "good_randoms",
+        "count": 1365042,
         "ranked_maps": [
             "Belle's Rock",
             "Below Zero",
@@ -27,6 +61,7 @@
         "date": "2025-02-25",
         "name": "s35",
         "description": "good_randoms",
+        "count": 127211,
         "ranked_maps": [
             "Belle's Rock",
             "Below Zero",
@@ -50,6 +85,7 @@
         "date": "2025-02-01",
         "name": "s35",
         "description": "new_ranked",
+        "count": 3535535,
         "ranked_maps": [
             "Belle's Rock",
             "Bridge Too Far",

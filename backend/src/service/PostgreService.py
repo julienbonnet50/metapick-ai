@@ -38,23 +38,31 @@ class PostgreService():
             exit(1)
 
     # Function to insert data into the players table
-    def insert_player(self, tag, last_rank, max_rank, insert_date, last_update_date, show=False):
+    def insert_or_update_player(self, tag, last_rank, max_rank, insert_date, last_update_date, show=False):
         insert_query = """
-        INSERT INTO dbo.players (tag, last_rank, max_rank, insert_date, last_update_date)
-        VALUES (%s, %s, %s, %s, %s);
+            INSERT INTO dbo.players (tag, last_rank, max_rank, insert_date, last_update_date)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (tag) 
+            DO UPDATE 
+            SET 
+                last_rank = EXCLUDED.last_rank, 
+                max_rank = GREATEST(dbo.players.max_rank, EXCLUDED.last_rank),
+                last_update_date = EXCLUDED.last_update_date;
         """
+
         try:
             if self.cursor is None or self.conn is None:
                 return "Database connection is not established"
 
+            self.conn.autocommit = False  # Ensure changes are committed only when successful
             self.cursor.execute(insert_query, (tag, last_rank, max_rank, insert_date, last_update_date))
             self.conn.commit()
             if show:
-                print(f"Successfully inserted player with tag: {tag}")
+                print(f"Successfully inserted or updated player with tag: {tag}")
         except psycopg2.Error as e:
             self.conn.rollback()
-            # print(f"Error inserting data: {e}")
-
+            if show:
+                print(f"Error inserting/updating data: {e}")
 
     def insert_battle_stats(self, id, timestamp, map, mode, avg_rank, wTeam, lTeam, insert_date):
         timestamp_str = timestamp[0].rstrip('Z')  # Remove the trailing 'Z'

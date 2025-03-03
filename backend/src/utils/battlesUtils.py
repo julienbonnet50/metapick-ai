@@ -127,13 +127,15 @@ def transform_battle(postgreService, brawlers, b: Dict[str, Any], insertNewPlaye
                 if insertNewPlayers:
                     tag = player["tag"]
                     last_rank = player["brawler"]["trophies"]
-                    if last_rank > 19:
+                    
+                    # Above 25 should be unranked ppl..
+                    if last_rank > 25:
                         last_rank = math.floor(last_rank / 500 + 1)
 
                     max_rank = None
                     insert_date = current_date
                     last_update_date = current_date
-                    postgreService.insert_player(tag, last_rank, max_rank, insert_date, last_update_date)
+                    postgreService.insert_or_update_player(tag, last_rank, max_rank, insert_date, last_update_date)
 
 
     avg_rank = round(math.floor(avg_rank / 6), 1)

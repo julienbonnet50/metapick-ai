@@ -27,7 +27,12 @@
         ["Undermine", "undermine.png"],
         ["Below Zero", "bouncy_bowl.webp"],
         ["Cool Box", "cool_box.webps"],
-        ["Super Center", "super_center.webp"]
+        ["Super Center", "super_center.webp"],
+        ["Layer Cake", "layer_cake.webp"],
+        ["Dry Season", "dry_season.webp"],
+        ["Gem Fort", "gem_fort.png"],
+        ["New Horizons", "new_horizons.png"],
+        ["Starr Garden", "starr_garden.webp"]
     ],
   "brawlers": [
     {

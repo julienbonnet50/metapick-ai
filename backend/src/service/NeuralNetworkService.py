@@ -10,6 +10,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
+from tqdm import tqdm
 
 from src.utils.modelUtils import BattleDataset, BrawlerPredictionModel
 
@@ -19,6 +20,7 @@ class NeuralNetworkService:
         self.model_path = model_path
         self.appConfig = appConfig
         self.version = version
+        self.autoLoadEnable = autoLoadEnable
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         
         self.brawler_to_idx = None
@@ -26,8 +28,9 @@ class NeuralNetworkService:
         self.dataset = None
         self.model = None
 
+        self.load_data()
+
         if autoLoadEnable:
-            self.load_data()
             self.load_model()
 
     def setVersion(self, version):
@@ -48,7 +51,7 @@ class NeuralNetworkService:
     
     def load_data(self):
         print(f"Loading data locally at path : {self.data_path}")
-        if os.path.exists(self.data_path):
+        if os.path.exists(self.data_path) and self.autoLoadEnable == True:
             print("Loading mappings from file...")
             self.load_mappings(self.data_path)
         else:
@@ -138,58 +141,137 @@ class NeuralNetworkService:
             print(f"Model not found at path '{self.model_path}'")
             raise FileNotFoundError(f"Model not found at path '{self.model_path}'")
         self.model.to(self.device)
-    
-    def train_model(self, num_epochs=10, batch_size=64, num_friends=3, num_enemies=3):
-        if os.path.exists(self.model_path):
-            print(f"Found existing model at path '{self.model_path}' abording training...")
 
-        print("Training model...")
-        dataloader = DataLoader(self.dataset, batch_size=batch_size, shuffle=True)
-        print("     Dataloader instanced")
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=1e-3)
-        print("     Optimizer instanced")
-        criterion = nn.CrossEntropyLoss()
-        print("     CrossEntropyLoss instanced")
+    def initialize_model(self, num_brawlers, num_maps, emb_dim=16, hidden_dim=64):
+        """Initialize the BrawlerPredictionModel with the correct parameters"""
+        print(f"Initializing model with {num_brawlers} brawlers and {num_maps} maps...")
+        self.model = BrawlerPredictionModel(
+            num_brawlers=num_brawlers,
+            num_maps=num_maps,
+            emb_dim=emb_dim,
+            hidden_dim=hidden_dim
+        ).to(self.device)
+        print("Model initialized successfully")
+        return self.model
+    
+    def train_model(self, num_epochs=10, batch_size=64, num_friends=3, num_enemies=3, val_split=0.1, patience=5):
+        # Ensure we have mappings
+        if self.brawler_to_idx is None or self.map_to_idx is None:
+            raise ValueError("Mappings not initialized. Please load or build mappings before training.")
         
-        print(f"Start training for {num_epochs} epochs...")
+        # Ensure model is initialized
+        if self.model is None:
+            print("Model is not initialized. Initializing model...")
+            self.initialize_model(
+                num_brawlers=len(self.brawler_to_idx),
+                num_maps=len(self.map_to_idx)
+            )
+            
+        # Check if model already exists
+        if os.path.exists(self.model_path):
+            print(f"Found existing model at path '{self.model_path}'. Loading model...")
+            self.model.load_state_dict(torch.load(self.model_path))
+            return
+        
+        print("Preparing for training...")
+        
+        # Create validation split
+        dataset_size = len(self.dataset)
+        val_size = int(val_split * dataset_size)
+        train_size = dataset_size - val_size
+        train_dataset, val_dataset = torch.utils.data.random_split(self.dataset, [train_size, val_size])
+        
+        # Create dataloaders
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+        val_dataloader = DataLoader(val_dataset, batch_size=batch_size)
+        
+        # Optimizer and scheduler
+        optimizer = torch.optim.Adam(self.model.parameters(), lr=1e-3)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2)
+        criterion = nn.CrossEntropyLoss()
+        
+        # For mixed precision training
+        scaler = torch.cuda.amp.GradScaler()
+        
+        # For early stopping
+        best_val_loss = float('inf')
+        patience_counter = 0
+        
+        print(f"Starting training for {num_epochs} epochs...")
         
         for epoch in range(num_epochs):
-            print(f"Epoch {epoch+1}/{num_epochs} started")
+            # Training phase
             self.model.train()
-            total_loss = 0.0
+            total_train_loss = 0.0
             
-            for batch_idx, batch in enumerate(dataloader):
-                print(f"     Processing batch {batch_idx+1}/{len(dataloader)}")
-                
+            train_progress = tqdm(train_dataloader, desc=f"Epoch {epoch+1}/{num_epochs}")
+            for batch in train_progress:
                 # Stack friends and enemies into tensors
                 friends = torch.stack([batch[f'friend{i+1}'] for i in range(num_friends)], dim=1).to(self.device)
-                print(f"         Friends tensor shape: {friends.shape}")
-
                 enemies = torch.stack([batch[f'enemy{i+1}'] for i in range(num_enemies)], dim=1).to(self.device)
-                print(f"         Enemies tensor shape: {enemies.shape}")
-
                 map_idx = batch['map_idx'].unsqueeze(1).to(self.device)
-                print(f"         Map index shape: {map_idx.shape}")
-
                 target = batch['target'].to(self.device)
-                print(f"         Target shape: {target.shape}")
-
+                
+                # Zero gradients
                 optimizer.zero_grad()
-                logits = self.model(friends, enemies, map_idx)
-                print(f"         Logits shape: {logits.shape}")
-
-                loss = criterion(logits, target)
-                print(f"         Batch loss: {loss.item():.4f}")
-
-                loss.backward()
-                optimizer.step()
-                total_loss += loss.item()
+                
+                # Mixed precision forward pass
+                with torch.cuda.amp.autocast():
+                    logits = self.model(friends, enemies, map_idx)
+                    loss = criterion(logits, target)
+                
+                # Backward pass with scaling
+                scaler.scale(loss).backward()
+                scaler.step(optimizer)
+                scaler.update()
+                
+                # Track loss
+                total_train_loss += loss.item()
+                train_progress.set_postfix(loss=loss.item())
             
-            avg_loss = total_loss / len(dataloader)
-            print(f"Epoch {epoch+1} completed - Average Loss: {avg_loss:.4f}")
+            avg_train_loss = total_train_loss / len(train_dataloader)
+            
+            # Validation phase
+            self.model.eval()
+            total_val_loss = 0.0
+            
+            with torch.no_grad():
+                val_progress = tqdm(val_dataloader, desc="Validation")
+                for batch in val_progress:
+                    # Stack friends and enemies into tensors
+                    friends = torch.stack([batch[f'friend{i+1}'] for i in range(num_friends)], dim=1).to(self.device)
+                    enemies = torch.stack([batch[f'enemy{i+1}'] for i in range(num_enemies)], dim=1).to(self.device)
+                    map_idx = batch['map_idx'].unsqueeze(1).to(self.device)
+                    target = batch['target'].to(self.device)
+                    
+                    # Forward pass
+                    logits = self.model(friends, enemies, map_idx)
+                    loss = criterion(logits, target)
+                    
+                    # Track loss
+                    total_val_loss += loss.item()
+                    val_progress.set_postfix(loss=loss.item())
+            
+            avg_val_loss = total_val_loss / len(val_dataloader)
+            
+            # Update learning rate scheduler
+            scheduler.step(avg_val_loss)
+            
+            print(f"Epoch {epoch+1} completed - Train Loss: {avg_train_loss:.4f}, Val Loss: {avg_val_loss:.4f}")
+            
+            # Early stopping check
+            if avg_val_loss < best_val_loss:
+                best_val_loss = avg_val_loss
+                patience_counter = 0
+                torch.save(self.model.state_dict(), self.model_path)
+                print(f"New best model saved with validation loss: {best_val_loss:.4f}")
+            else:
+                patience_counter += 1
+                if patience_counter >= patience:
+                    print(f"Early stopping triggered after {epoch+1} epochs")
+                    break
         
-        torch.save(self.model.state_dict(), self.model_path)
-        print("Training complete. Model saved.")
+        print(f"Training complete. Final best validation loss: {best_val_loss:.4f}")
 
     def predict_best_brawler(self, friends, enemies, map_name, excluded=[]):
         self.model.eval()
