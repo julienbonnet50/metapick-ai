@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import BrawlStarsDraft from "@components/BrawlStarsDraft";
 import HowToUse from "@components/HowToUse";
 import Navbar from "@components/Navbar";
+import { Analytics } from "@vercel/analytics/react"
 
 const App: React.FC = () => {
   const [showHowToUse, setShowHowToUse] = useState<boolean>(false);
@@ -112,6 +113,7 @@ const App: React.FC = () => {
       
       {/* Main Content */}
       <BrawlStarsDraft />
+      <Analytics />
     </div>
   );
 };
