@@ -23,7 +23,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "MetaPick AI",
-  description: "Web app to generate Brawl Stars Drafts based on AI",
+  description: "Create optimal team compositions and strategies for Brawl Stars using AI.",
 };
 
 export default function RootLayout({

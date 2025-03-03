@@ -9,6 +9,7 @@ interface NavbarProps {
 
 interface GameVersion {
   version: string;
+  count: number
   date: string;
   name: string;
   description: string;
@@ -75,11 +76,13 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
           {isLoading ? (
             <div className="text-sm">Loading version info...</div>
           ) : latestVersion ? (
-            <div className="text-sm bg-amber-900 rounded px-3 py-1">
-              <span className="font-medium">Version {latestVersion.version}</span>
-              <span className="mx-1">•</span>
-              <span>{"Mythic+ ranked games from " + formatDate(latestVersion.date)}</span>
-            </div>
+            <div className="text-sm bg-gradient-to-r from-rose-950 to-yellow-800 rounded-full px-4 py-2 shadow-md flex items-center justify-center space-x-2 border border-gray-700 text-gray-200">
+            <span className="font-semibold text-white">Version {latestVersion.version}</span>
+            <span className="h-1 w-1 bg-gray-500 rounded-full"></span>
+            <span><span className="text-violet-400">Mythic+</span>{" ranked games analyzed: " + latestVersion.count.toLocaleString()}</span>
+            <span className="h-1 w-1 bg-gray-500 rounded-full"></span>
+            <span>{"Updated from " + formatDate(latestVersion.date)}</span>
+          </div>
           ) : (
             <div className="text-sm">Version info unavailable</div>
           )}
