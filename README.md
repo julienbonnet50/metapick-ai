@@ -40,8 +40,11 @@ npm run dev
 
 ## API Endpoints
 - `POST /simulate_draft` – Returns top brawler recommendations based on input.  
+- `POST /predict_winrate` – Returns estimated winrate of the game, based on input.  
 - `GET /get_maps` – Fetches available maps.  
-- `GET /get_brawlers` – Fetches brawler data.  
+- `GET /get_brawlers` – Fetches brawler data.
+- `GET /get_game_versions` – Fetches available versions of db, trained model, and state of ranked.    
+
 
 ## Contributing
 Contributions are welcome! Feel free to submit issues or open pull requests.
