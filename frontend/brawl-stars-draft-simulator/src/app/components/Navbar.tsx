@@ -1,26 +1,91 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from 'next/image';
+import { fetchGameVersions } from "../utils/api";
 
 interface NavbarProps {
   toggleHowToUse: () => void;
   showHowToUse: boolean;
 }
 
+interface GameVersion {
+  version: string;
+  date: string;
+  name: string;
+  description: string;
+  ranked_maps: string[];
+}
+
+const BASE_URL = process.env.NEXT_PUBLIC_ENDPOINT_BASE_URL || "https://metapick-ai.onrender.com";
+
 const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
+  const [latestVersion, setLatestVersion] = useState<GameVersion | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const loadGameVersion = async () => {
+      try {
+        setIsLoading(true);
+        const gameVersionData = await fetchGameVersions(BASE_URL);
+        
+        // Sort versions by date (newest first)
+        const sortedVersions = [...gameVersionData].sort((a, b) => 
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+        
+        if (sortedVersions.length > 0) {
+          setLatestVersion(sortedVersions[0]);
+        }
+      } catch (error: unknown) {
+        console.error('Error fetching game versions:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadGameVersion();
+  }, []);
+  
+  // Format date to be more readable
+  const formatDate = (dateString: string) => {
+    const options: Intl.DateTimeFormatOptions = { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
   return (
     <nav className="bg-yellow-950 text-amber-50 p-4 shadow-md" style={{ fontFamily: 'Roboto, sans-serif' }}>
-      <div className="container mx-auto flex justify-between items-center">
-        {/* Logo */}
-        <Image
-          width={40}
-          height={40}
-          src="/web-app-manifest-192x192.png"  
-          alt="Logo"
-          className="h-10 mr-4" 
-        />
+      <div className="container mx-auto flex flex-wrap justify-between items-center">
+        {/* Left side - Logo and Title */}
+        <div className="flex items-center">
+          <Image
+            width={40}
+            height={40}
+            src="/web-app-manifest-192x192.png"  
+            alt="Logo"
+            className="h-10 mr-4" 
+          />
+          <h1 className="text-xl font-bold">Brawl Stars Draft Tool</h1>
+        </div>
         
-        <h1 className="text-xl font-bold">Brawl Stars Draft Tool</h1>
+        {/* Middle - Version Info */}
+        <div className="flex items-center justify-center px-4">
+          {isLoading ? (
+            <div className="text-sm">Loading version info...</div>
+          ) : latestVersion ? (
+            <div className="text-sm bg-amber-900 rounded px-3 py-1">
+              <span className="font-medium">Version {latestVersion.version}</span>
+              <span className="mx-1">•</span>
+              <span>{"Mythic+ ranked games from " + formatDate(latestVersion.date)}</span>
+            </div>
+          ) : (
+            <div className="text-sm">Version info unavailable</div>
+          )}
+        </div>
         
+        {/* Right side - How to Use button */}
         <button
           onClick={toggleHowToUse}
           className="px-4 py-2 bg-amber-800 rounded hover:bg-amber-700 transition-colors"

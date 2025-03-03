@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { fetchBrawlers, fetchMaps } from "../utils/api";
 import brawlerMaps from "../data/brawlersMaps.json"; // Import the maps
 
-const BASE_URL = process.env.REACT_APP_ENDPOINT_BASE_URL || "https://metapick-ai.onrender.com";
+const BASE_URL = process.env.NEXT_PUBLIC_ENDPOINT_BASE_URL || "https://metapick-ai.onrender.com";
 console.log("BASE_URL", BASE_URL);
 
 // Define the Brawler type
@@ -35,6 +35,8 @@ const BrawlStarsDraft = () => {
   const [submissionResult, setSubmissionResult] = useState<SubmissionBrawler[] | null>(null);
   const [isBanMode, setIsBanMode] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [winRate, setWinRate] = useState<number | null>(null);
+  const [isLoadingWinRate, setIsLoadingWinRate] = useState<boolean>(false);
 
   // Fetch data on component mount
   useEffect(() => {
@@ -104,16 +106,66 @@ const BrawlStarsDraft = () => {
     } else if (isInTeamA && team === "A") {
       // Remove from Team A if clicked again
       setTeamA(prev => prev.filter(b => b.id !== brawler.id));
+      // Reset win rate when team composition changes
+      setWinRate(null);
     } else if (isInTeamB && team === "B") {
       // Remove from Team B if clicked again
       setTeamB(prev => prev.filter(b => b.id !== brawler.id));
+      // Reset win rate when team composition changes
+      setWinRate(null);
     }
   };
 
   // Handle map selection
   const handleMapChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedMap(e.target.value);
+    // Reset win rate when map changes
+    setWinRate(null);
   };
+
+  // Fetch win rate prediction when both teams are full
+  useEffect(() => {
+    const fetchWinRate = async () => {
+      // Only fetch if both teams are full (3 brawlers each) and a map is selected
+      if (teamA.length === 3 && teamB.length === 3 && selectedMap) {
+        setIsLoadingWinRate(true);
+        
+        try {
+          const friends = teamA.map(brawler => brawler.name);
+          const enemies = teamB.map(brawler => brawler.name);
+          
+          const response = await fetch(`${BASE_URL}/predict_winrate`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              initial_team: friends,
+              initial_opponent: enemies,
+              map: selectedMap
+            }),
+          });
+          
+          if (!response.ok) {
+            throw new Error("Failed to fetch win rate prediction");
+          }
+          
+          const data = await response.json();
+          setWinRate(data);
+        } catch (error) {
+          console.error("Error fetching win rate:", error);
+          setWinRate(null);
+        } finally {
+          setIsLoadingWinRate(false);
+        }
+      } else {
+        // Reset win rate if teams are not full
+        setWinRate(null);
+      }
+    };
+    
+    fetchWinRate();
+  }, [teamA, teamB, selectedMap]);
 
   // Submit draft data
   const handleSubmit = async () => {
@@ -189,6 +241,7 @@ const BrawlStarsDraft = () => {
     setBannedBrawlers([]);
     setSubmissionResult(null);
     setIsBanMode(false);
+    setWinRate(null);
   };
 
   // Get the current map's image URL
@@ -209,6 +262,24 @@ const BrawlStarsDraft = () => {
   const clearSearch = () => {
     setSearchTerm("");
   };
+
+  // Determine win rate color and text based on the percentage
+  const getWinRateColorClass = () => {
+    if (winRate === null) return "";
+    if (winRate >= 60) return "text-success";
+    if (winRate >= 45) return "text-warning";
+    return "text-error";
+  };
+
+const getWinRateText = () => {
+    if (winRate === null) return "Win rate unavailable";
+    
+    if (winRate > 54) return "Dominant matchup - Strong advantage";
+    if (winRate > 52) return "Favorable matchup - Your team has an edge";
+    if (winRate > 48) return "Even matchup - Could go either way";
+    if (winRate > 45) return "Slight disadvantage - Play carefully";
+    return "Unfavorable matchup - Tough battle ahead";
+};
 
   return (
     <div className="container mx-auto p-4 max-w-full px-48">
@@ -348,6 +419,47 @@ const BrawlStarsDraft = () => {
                     ))}
                   </div>
                 </div>
+
+                {/* Win Rate Indicator - Shows when both teams are full and win rate is available */}
+                {teamA.length === 3 && teamB.length === 3 && (
+                  <div className="absolute bottom-0 left-0 right-0 p-2 bg-base-300 bg-opacity-90 group">
+                    <div className="text-center font-bold cursor-help">
+                      {isLoadingWinRate ? (
+                        <span className="loading loading-dots loading-md"></span>
+                      ) : (
+                        <>
+                          <span>Match Prediction</span>
+                          <div className="opacity-100 absolute bottom-full left-0 right-0 p-3 bg-base-200 rounded-md shadow-lg z-10">
+                            {winRate !== null ? (
+                              <div className="flex flex-col items-center gap-1">
+                                <span className={`text-xl font-bold ${getWinRateColorClass()}`}>
+                                  {safeToFixed(winRate, 1)}% Win Rate
+                                </span>
+                                <span className={getWinRateColorClass()}>
+                                  {getWinRateText()}
+                                </span>
+                                <div className="w-full bg-gray-300 rounded-full h-4 mt-2">
+                                  <div 
+                                    className={`h-4 rounded-full ${
+                                      winRate >= 52 ? 'bg-success' : 
+                                      winRate >= 48 ? 'bg-warning' : 'bg-error'
+                                    }`}
+                                    style={{ width: `${Math.min(100, Math.max(0, winRate))}%` }}
+                                  ></div>
+                                </div>
+                                <p className="text-xs mt-2">
+                                  Based on AI analysis of your team composition versus the enemy team on {selectedMap}
+                                </p>
+                              </div>
+                            ) : (
+                              <p>Unable to calculate win rate</p>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
               </figure>
               <h3 className="text-3xl font-semibold mt-2">{selectedMap}</h3>
             </div>

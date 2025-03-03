@@ -14,7 +14,7 @@ const HowToUse: React.FC = () => {
           <li>The tool will suggest optimal picks based on the current meta.</li>
           <li>View team compositions and counter strategies once the drafting is complete.</li>
         </ul>
-        <p className="mt-3 text-sm text-amber-700">Your draft score will be evaluated and updated as you modify the picks maps and bans.</p>
+        <p className="mt-3 text-sm text-amber-700">Your draft score will be evaluated and updated as you modify the picks, maps and bans.</p>
       </div>
     </div>
   );
