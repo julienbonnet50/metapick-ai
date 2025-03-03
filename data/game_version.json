@@ -1,7 +1,7 @@
 [
     {
-        "version": "35",
-        "date": "2025-02-01",
+        "version": "35_2",
+        "date": "2025-02-28",
         "name": "s35",
         "description": "good_randoms",
         "ranked_maps": [
@@ -25,6 +25,29 @@
     {
         "version": "35_1",
         "date": "2025-02-25",
+        "name": "s35",
+        "description": "good_randoms",
+        "ranked_maps": [
+            "Belle's Rock",
+            "Below Zero",
+            "Center Stage",
+            "Cool Box",
+            "Double Swoosh",
+            "Dueling Beetles",
+            "Flaring Phoenix",
+            "Hard Rock Mine",
+            "Open Business",
+            "Out in the Open",
+            "Parallel Plays",
+            "Pinball Dreams",
+            "Sneaky Fields",
+            "Super Center",
+            "Undermine"
+        ]
+    },
+    {
+        "version": "35",
+        "date": "2025-02-01",
         "name": "s35",
         "description": "new_ranked",
         "ranked_maps": [

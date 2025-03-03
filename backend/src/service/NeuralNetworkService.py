@@ -47,19 +47,18 @@ class NeuralNetworkService:
         return df
     
     def load_data(self):
-        print(f"Loading data... at path : {self.data_path}")
+        print(f"Loading data locally at path : {self.data_path}")
         if os.path.exists(self.data_path):
             print("Loading mappings from file...")
-            with open(self.data_path, "rb") as f:
-                data = pickle.load(f)
             self.load_mappings(self.data_path)
         else:
-            print("Loading data from SQL...")
+            print("Data not found locally")
+            print("Loading data from SQL DB...")
             df = self.fetch_battle_data()
             df = self.prepare_dataset(df, num_friends=3, num_enemies=3, pad_idx=0)
             self.brawler_to_idx, self.map_to_idx = self.build_mappings(df)
             self.dataset = BattleDataset(df, self.brawler_to_idx, self.map_to_idx)
-            self.save_mappings()
+            self.save_mappings(self.data_path)
     
     def fetch_battle_data(self):
         conn = psycopg2.connect(
@@ -114,6 +113,7 @@ class NeuralNetworkService:
         if not os.path.exists(directory):
             os.makedirs(directory)
 
+        print("Saving mappings to file at path :", path)
         with open(path, "wb") as f:
             pickle.dump(dataMappings, f)
     
@@ -134,6 +134,9 @@ class NeuralNetworkService:
         if os.path.exists(self.model_path):
             print(f"Found existing model at path '{self.model_path}'")
             self.model.load_state_dict(torch.load(self.model_path, map_location=self.device))
+        else:
+            print(f"Model not found at path '{self.model_path}'")
+            raise FileNotFoundError(f"Model not found at path '{self.model_path}'")
         self.model.to(self.device)
     
     def train_model(self, num_epochs=10, batch_size=64, num_friends=3, num_enemies=3):
@@ -226,4 +229,54 @@ class NeuralNetworkService:
         
         # Return top-k brawlers with their probabilities
         return [(self.idx_to_brawler(idx), prob) for idx, prob in zip(topk.indices.squeeze(0).tolist(), topk.values.squeeze(0).tolist())]
+    
+    def predict_winrate(self, friends, enemies, map_name):
+        """
+        Predict the win rate for a team of friends against a team of enemies on a specific map.
+        
+        Args:
+            friends (list): List of friend brawler names.
+            enemies (list): List of enemy brawler names.
+            map_name (str): Name of the map.
+            
+        Returns:
+            float: Estimated win rate percentage (0-100).
+        """
+        self.model.eval()
+        pad_idx = self.model.pad_idx
+
+        # Convert brawler names to indices
+        friend_indices = [self.brawler_to_idx.get(b, pad_idx) for b in friends]
+        enemy_indices = [self.brawler_to_idx.get(b, pad_idx) for b in enemies]
+
+        # Ensure proper padding
+        friend_indices += [pad_idx] * (self.model.num_friends - len(friend_indices))
+        enemy_indices += [pad_idx] * (self.model.num_enemies - len(enemy_indices))
+
+        # Convert inputs to tensors and move to device
+        map_idx = torch.tensor([[self.map_to_idx.get(map_name, 0)]], dtype=torch.long, device=self.device)
+        friends_tensor = torch.tensor([friend_indices], dtype=torch.long, device=self.device)
+        enemies_tensor = torch.tensor([enemy_indices], dtype=torch.long, device=self.device)
+
+        # Make predictions
+        with torch.no_grad():
+            logits = self.model(friends_tensor, enemies_tensor, map_idx)  # Shape: (1, num_brawlers)
+            mirror_logits = self.model(enemies_tensor, friends_tensor, map_idx)
+
+            # Normalize logits using softmax
+            probabilities = torch.softmax(logits, dim=1)
+            mirror_probabilities = torch.softmax(mirror_logits, dim=1)
+
+            # Extract friend and enemy scores
+            friend_scores = probabilities[0, friend_indices].mean().item()  # Averaging instead of summing
+            enemy_scores = mirror_probabilities[0, enemy_indices].mean().item()
+
+            # Compute relative strength
+            relative_strength = friend_scores - enemy_scores
+
+            # Apply a calibrated sigmoid function
+            scale = 5  # Tune this parameter based on validation data
+            win_rate = 100 * (1 / (1 + torch.exp(torch.tensor(-relative_strength * scale, device=self.device)))).item()
+
+        return round(win_rate, 2)
 

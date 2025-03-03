@@ -15,11 +15,12 @@ class AppConfig:
         self.logs_level = int(os.getenv("LOGS_LEVEL", "1"))
                 # Get the port from the environment variable (use a default if not available)
         self.port = int(os.environ.get("PORT", 10000))
+        self.data_game_version = None
         self.dataIndex = None
         self.dataVersion = None
         self.dataMaps = None
         self.initApp()
-
+        
     def initApp(self):
         # Load data from JSON file
         with open('data/brawlersMaps.json', 'r') as file:
@@ -30,6 +31,8 @@ class AppConfig:
         for versionElem in self.version:
             if versionElem['version'] == self.game_version:
                 self.dataMaps = versionElem['ranked_maps']
+
+        self.setDataGameVersion()
 
     def setBrawler(self):
         brawlers = []
@@ -45,4 +48,10 @@ class AppConfig:
         # Set brawlers updated
         self.dataIndex['brawlers'] = brawlers
         pass
+
+    def setDataGameVersion(self):
+        # Load data from JSON file
+        with open('data/game_version.json', 'r') as file:
+            self.data_game_version = json.load(file)
+        
             

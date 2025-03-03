@@ -62,7 +62,7 @@ class PostgreService():
 
         # Convert to a 'yyyy-mm-dd' string
         formatted_date = date.strftime("%Y-%m-%d")
-        tableName = self.get_correct_battle_version(formatted_date, self.appConfig.version)
+        tableName = self.get_correct_battle_version(formatted_date, self.appConfig.data_game_version)
         insert_query = f"""
         INSERT INTO {tableName} (id, timestamp, map, mode, avg_rank, wTeam, lTeam, insert_date)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
@@ -94,6 +94,48 @@ class PostgreService():
             print(f"Error retrieving data: {e}")
             return []
         
+    def execute_custom_query(self, query):
+        try:
+            if self.cursor is None or self.conn is None:
+                return "Database connection is not established"
+
+            self.cursor.execute(query)
+            print(f"Query {query} executed successfully")
+        except psycopg2.Error as e:
+            print(f"Error executing query: {e}")
+            return []
+        
+    import psycopg2
+
+    def create_battles_table_version(self, version):
+        query = f"""
+        CREATE TABLE IF NOT EXISTS battles_s{str(version)} (
+            id VARCHAR(255) PRIMARY KEY,
+            timestamp TIMESTAMP,
+            map VARCHAR(255),
+            mode VARCHAR(255),
+            avg_rank FLOAT,
+            wTeam TEXT,
+            lTeam TEXT,
+            insert_date VARCHAR(255)
+        );"""
+        
+        try:
+            if self.conn is None or self.cursor is None:
+                return "Database connection is not established"
+
+            print(f"Starting to create table battles_s{version}")
+            self.cursor.execute(query)
+            self.conn.commit()  # Ensure changes are saved
+            print(f"Table battles_s{version} created successfully")
+            return f"Table battles_s{version} created successfully"
+
+        except psycopg2.Error as e:
+            print(f"Error creating table: {e}")
+            return f"Error: {e}"  # Return the actual error message
+
+
+
 
     def get_all_battles(self):
         select_query = "SELECT * FROM battles;"
@@ -138,9 +180,17 @@ class PostgreService():
 
     def get_correct_battle_version(self, target_date, data):
         target_date = datetime.strptime(target_date, "%Y-%m-%d").date()
-
-        # Sort data by date (ascending)
-        sorted_data = sorted(data, key=lambda x: datetime.strptime(x["date"], "%Y-%m-%d").date())
+        
+        # Create a valid sorted list, skipping invalid dates
+        valid_data = []
+        for entry in data:
+            try:
+                entry_date = datetime.strptime(entry["date"], "%Y-%m-%d").date()
+                valid_data.append(entry)
+            except ValueError:
+                print(f"Warning: Skipping invalid date {entry['date']} for version {entry['version']}")
+        
+        sorted_data = sorted(valid_data, key=lambda x: datetime.strptime(x["date"], "%Y-%m-%d").date())
 
         # If target_date is before the first recorded entry, return the first valid version
         if target_date < datetime.strptime(sorted_data[0]["date"], "%Y-%m-%d").date():

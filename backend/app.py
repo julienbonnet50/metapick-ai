@@ -64,6 +64,9 @@ def get_brawlers():
 def get_maps(): 
     return appConfig.dataMaps
     
+@app.route('/get_game_versions', methods=['GET'])
+def get_game_versions(): 
+    return appConfig.data_game_version
 
 @app.route('/simulate_draft', methods=['POST'])
 def simulate_draft():
@@ -103,6 +106,34 @@ def simulate_draft():
 
         return jsonify(response)
         
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/predict_winrate', methods=['POST'])
+def predict_winrate():
+    try: 
+        startTime = int(round(time.time() * 1000))
+        # Extract parameters from the request body
+        data = request.get_json()
+        mapName = data.get('map', '')
+        
+        # Use getlist() to retrieve all values for multi-select fields
+        friend_brawlers = [b.strip().upper() for b in data.get('initial_team')]
+        enemy_brawlers = [b.strip().upper() for b in data.get('initial_opponent')]
+
+        predicted_winrate = neuralNetworkService.predict_winrate(friend_brawlers, enemy_brawlers, mapName)
+
+                # Display results
+        if appConfig.logs_level > 0:
+            print("============ /simulate_draft response ============")
+            print(f"Map : {mapName}")
+            print(f"Friend Brawlers : {friend_brawlers}")
+            print(f"Enemy Brawlers : {enemy_brawlers}")
+            print(f"Estimated Winrate: {predicted_winrate}")
+            print("in ", int(round(time.time() * 1000)) - startTime, "ms")
+
+        return str(predicted_winrate)
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
