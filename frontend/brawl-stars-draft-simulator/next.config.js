@@ -1,13 +1,11 @@
-// next.config.js
+/** @type {import('next').NextConfig} */
 module.exports = {
-    images: {
-      remotePatterns: [
-        {
-          protocol: 'https',
-          hostname: 'cdn.brawlify.com', // External domain
-          pathname: '/brawlers/borders/*', // Optional, specify path pattern if needed
-        },
-      ],
-    },
-  };
-  
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "cdn.brawlify.com", // Allow all images from this domain
+      },
+    ],
+  },
+};

@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import Image from 'next/image';
 import { fetchBrawlers, fetchMaps } from "../utils/api";
-import brawlerMaps from "../data/brawlersMaps.json"; // Import the maps
 
 const BASE_URL = process.env.NEXT_PUBLIC_ENDPOINT_BASE_URL || "https://metapick-ai.onrender.com";
 console.log("BASE_URL", BASE_URL);
@@ -12,6 +11,12 @@ interface Brawler {
   id: number;
   name: string;
   imageUrl: string;
+}
+
+interface Map {
+  name: string,
+  gameMode: string,
+  imageUrl: string
 }
 
 // Define Submission Result type
@@ -27,7 +32,7 @@ const safeToFixed = (value: number, decimals: number = 2) => {
 
 const BrawlStarsDraft = () => {
   const [brawlers, setBrawlers] = useState<Brawler[]>([]);
-  const [maps, setMaps] = useState<string[]>([]);
+  const [mapsData, setMaps] = useState<Map[]>([]);
   const [selectedMap, setSelectedMap] = useState<string>("");
   const [teamA, setTeamA] = useState<Brawler[]>([]);
   const [teamB, setTeamB] = useState<Brawler[]>([]);
@@ -46,7 +51,15 @@ const BrawlStarsDraft = () => {
 
       // Sort brawlers by name
       const sortedBrawlers = brawlersData.sort((a: Brawler, b: Brawler) => a.name.localeCompare(b.name));
-      const sortedMaps = mapsData.sort((a: string, b: string) => a.localeCompare(b));
+      const sortedMaps = mapsData.sort((a: Map, b: Map) => {
+        const gameModeComparison = a.gameMode.localeCompare(b.gameMode);
+
+        if (gameModeComparison === 0) {
+          return a.name.localeCompare(b.name);
+        }
+  
+        return gameModeComparison;
+      });
 
       setBrawlers(sortedBrawlers);
       setMaps(sortedMaps);
@@ -245,7 +258,7 @@ const BrawlStarsDraft = () => {
   };
 
   // Get the current map's image URL
-  const currentMapImage = brawlerMaps.maps.find((map) => map[0] === selectedMap)?.[1] || "";
+  const currentMapImage = mapsData.find((map) => map.name === selectedMap)?.imageUrl || "";
 
   // Function to check if a brawler is selected in any team or banned
   const getBrawlerStatus = (brawler: Brawler) => {
@@ -288,19 +301,42 @@ const BrawlStarsDraft = () => {
   return (
     <div className="container mx-auto p-4 max-w-full px-48">
 
-      {/* Map Selection */}
-      <div className="form-control mb-8">
-        <label className="label">
-          <span className="label-text">Select Map</span>
-        </label>
-        <select className="select text-1xl select-bordered w-full text-1xl" onChange={handleMapChange} value={selectedMap}>
-          <option value="">Select a map</option>
-          {maps.map((map, index) => (
-            <option key={index} value={map}>
-              {map}
+      {/* Map and Account Selection */}
+      <div className="flex space-x-4 mb-8">
+        {/* Map Selection */}
+        <div className="flex-1">
+          <label className="label">
+            <span className="label-text">Select Map</span>
+          </label>
+          <select
+            className="select select-bordered w-96 text-lg py-2 px-4 rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onChange={handleMapChange}
+            value={selectedMap}
+          >
+            <option value="" className="text-gray-500">
+              Select a map
             </option>
-          ))}
-        </select>
+            {mapsData.map((map: Map, index) => (
+              <option key={index} value={map.name}>
+                {map.gameMode} - {map.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        {/* Account Tag Selection */}
+        {/* <div className="flex-1">
+          <label htmlFor="accountTag" className="label">
+            <span className="label-text">Enter Your Account Tag</span>
+          </label>
+          <input
+            type="text"
+            id="accountTag"
+            name="accountTag"
+            placeholder="e.g., User#1234"
+            className="input input-bordered w-full"
+            required
+          />
+        </div> */}
       </div>
 
       {/* Main Content Layout */}
@@ -367,7 +403,7 @@ const BrawlStarsDraft = () => {
             <div className="card bg-base-200 shadow-md p-4 text-center mb-8">
               <figure className="relative">
                 <Image 
-                  src={`/assets/maps/${currentMapImage}`} // Adjust the path as needed
+                  src={`${currentMapImage}`} // Adjust the path as needed
                   alt={selectedMap}
                   width={256}
                   height={384}
@@ -471,7 +507,7 @@ const BrawlStarsDraft = () => {
         </div>
 
         {/* Right Side: Top 10 Brawlers */}
-        <div className="lg:w-/6">
+        <div className="lg:w1/6">
           {submissionResult && (
             <div className="card bg-base-200 shadow-md p-4">
               <h2 className="text-xl font-bold mb-4 text-center">

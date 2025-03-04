@@ -27,15 +27,8 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
       try {
         setIsLoading(true);
         const gameVersionData = await fetchGameVersions(BASE_URL);
+        setLatestVersion(gameVersionData);
         
-        // Sort versions by date (newest first)
-        const sortedVersions = [...gameVersionData].sort((a, b) => 
-          new Date(b.date).getTime() - new Date(a.date).getTime()
-        );
-        
-        if (sortedVersions.length > 0) {
-          setLatestVersion(sortedVersions[0]);
-        }
       } catch (error: unknown) {
         console.error('Error fetching game versions:', error);
       } finally {
