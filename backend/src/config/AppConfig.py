@@ -24,20 +24,53 @@ class AppConfig:
         self.game_version = None
         
         self.initApp()
+        self.resolveMaps()
         
     def initApp(self):
         # Load data from JSON file
+        self.setDataIndex()
+        self.setBrawler()
+        self.setDataGameVersion()
+        self.setLatestGameVersion()
+        self.setDataMaps()
+
+    def setDataIndex(self):
         data_index_path = os.path.join(self.BASE_DIR, "data", "brawlersMaps.json")
         with open(data_index_path, 'r') as file:
             self.dataIndex = json.load(file)
 
-        self.setBrawler()
-        self.setDataGameVersion()
-        self.setLatestGameVersion()
+    ##### MAPS #####
 
-        for version in self.data_game_version:
-            if version['version'] == self.game_version:
-                self.dataMaps = version['ranked_maps']
+    def resolveMaps(self):
+        currentRankedMaps = []
+        insertedMapNames = set()
+
+        for map in self.dataMaps:
+            mapName = map['name']
+            
+            if mapName not in insertedMapNames:
+                for currentRankedMap in self.data_game_version['ranked_maps']:
+                    if mapName == currentRankedMap:
+                        mapsToAdd = {
+                            "name": mapName,
+                            "gameMode": map['gameMode']['name'],
+                            "imageUrl": map['imageUrl']
+                        }
+
+                        currentRankedMaps.append(mapsToAdd)
+                        insertedMapNames.add(mapName)  
+                        break 
+
+        print("Current ranked maps resolved:", len(currentRankedMaps))
+        self.dataMaps = currentRankedMaps  
+
+    def setDataMaps(self):
+        # Load data from JSON file
+        data_maps_path = os.path.join(self.BASE_DIR, "data", "maps.json")
+
+        with open(data_maps_path, 'r', encoding="utf-8") as file:
+            data = json.load(file)
+            self.dataMaps = data['maps']
 
     def setBrawler(self):
         brawlers = []
@@ -64,6 +97,7 @@ class AppConfig:
     def setLatestGameVersion(self):
         # Sort by version number in descending order
         latest_version = max(self.data_game_version, key=lambda x: x["date"])
+        self.data_game_version = latest_version
         self.game_version = latest_version["version"]
         print(f"Latest game version: {self.game_version}")
 

@@ -166,12 +166,6 @@ class NeuralNetworkService:
                 num_brawlers=len(self.brawler_to_idx),
                 num_maps=len(self.map_to_idx)
             )
-            
-        # Check if model already exists
-        if os.path.exists(self.model_path):
-            print(f"Found existing model at path '{self.model_path}'. Loading model...")
-            self.model.load_state_dict(torch.load(self.model_path))
-            return
         
         print("Preparing for training...")
         
