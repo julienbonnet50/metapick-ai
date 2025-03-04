@@ -49,8 +49,11 @@ const BrawlStarsDraft = () => {
       const brawlersData = await fetchBrawlers(BASE_URL);
       const mapsData = await fetchMaps(BASE_URL);
 
-      // Sort brawlers by name
-      const sortedBrawlers = brawlersData.sort((a: Brawler, b: Brawler) => a.name.localeCompare(b.name));
+      // Sort the remaining brawlers and custom exclusion
+      const excludedBrawlerName = 'Lumi';
+      const filteredBrawlers = brawlersData.filter((brawler: Brawler) => brawler.name !== excludedBrawlerName);
+
+      const sortedBrawlers = filteredBrawlers.sort((a: Brawler, b: Brawler) => a.name.localeCompare(b.name));
       const sortedMaps = mapsData.sort((a: Map, b: Map) => {
         const gameModeComparison = a.gameMode.localeCompare(b.gameMode);
 
