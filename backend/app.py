@@ -22,16 +22,12 @@ from src.service import NeuralNetworkService
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+appConfig = AppConfig()
+
 
 app = Flask(__name__)
 
-# For local development :
-CORS(app, resources={r"/*": {"origins": "*"}})
-
-# For production :
-# CORS(app, supports_credentials=True, origins=["https://metapick-ai.vercel.app"])
-
-appConfig = AppConfig()
+CORS(app, supports_credentials=True, origins=appConfig.origins)
 
 # Construct the correct paths using BASE_DIR
 app.secret_key = appConfig.SECRET_KEY

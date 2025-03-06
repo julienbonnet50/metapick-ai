@@ -22,6 +22,10 @@ class AppConfig:
         self.REDIRECT_URI = os.getenv("REDIRECT_URI", "http://localhost:10000/auth/google")
         self.SECRET_KEY = os.getenv("SECRET_KEY", "secret")
 
+        self.origins = []
+
+        self.origins.append(os.getenv("ORIGIN", "*"))
+
         self.port = int(os.environ.get("PORT", 10000))
 
         self.data_game_version = None
