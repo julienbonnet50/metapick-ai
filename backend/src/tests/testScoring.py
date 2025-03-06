@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 sys.path.append(os.getcwd())
@@ -11,29 +12,18 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 
 appConfig = AppConfig.AppConfig()
 
-version = "35_3"
-
 # Construct the correct paths using BASE_DIR
-data_path = os.path.join(BASE_DIR, "data", "model", f"version_{version}", "mappings.pkl")
-model_path = os.path.join(BASE_DIR, "data", "model", f"version_{version}", "nn_model_all.pth")
-
+data_path = os.path.join(BASE_DIR, "data", "model", f"version_{appConfig.game_version}", "mappings.pkl")
+model_path = os.path.join(BASE_DIR, "data", "model", f"version_{appConfig.game_version}", "nn_model_all.pth")
+tierlist_path = os.path.join(BASE_DIR, "data", "model", f"version_{appConfig.game_version}", "tierlist.json")
 
 neuralNetworkService = NeuralNetworkService.NeuralNetworkService(data_path=data_path, 
                                                                  model_path=model_path, 
-                                                                 version=version,
+                                                                 version=appConfig.game_version,
                                                                  appConfig=appConfig)
 
 
-mapName = 'Center Stage'
-excluded_brawlers = ['DYNAMIKE', 'MORTIS']
-friend_brawlers = ['SPIKE']
-enemy_brawlers = ['AMBER']
-
-print(neuralNetworkService.predict_best_brawler(friends=friend_brawlers, enemies=enemy_brawlers, map_name=mapName, excluded=excluded_brawlers))
 
 
-mapName = 'Center Stage'
-friend_brawlers = ['SPIKE', 'MORTIS', 'DYNAMIKE']
-enemy_brawlers = ['AMBER', 'GUS', 'RICO']
-
-print(neuralNetworkService.predict_winrate(friends=friend_brawlers, enemies=enemy_brawlers, map_name=mapName))  
+filteredDf = appConfig.battleStats[appConfig.battleStats["map"] == 'Center Stage'] if 'Center Stage' else appConfig.battleStats
+print(filteredDf.to_dict(orient="records"))

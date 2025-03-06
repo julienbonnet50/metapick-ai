@@ -1,3 +1,4 @@
+import json
 import sys
 import os
 sys.path.append(os.getcwd())
@@ -62,6 +63,71 @@ class NeuralNetworkService:
             self.brawler_to_idx, self.map_to_idx = self.build_mappings(df)
             self.dataset = BattleDataset(df, self.brawler_to_idx, self.map_to_idx)
             self.save_mappings(self.data_path)
+
+    def fetch_stats_battle_data(self):
+        query = """
+            WITH battle_data AS (
+                SELECT
+                    id,
+                    timestamp,
+                    map,
+                    mode,
+                    avg_rank,
+                    unnest(string_to_array(wTeam, '-')) AS brawler,
+                    'Victory' AS result
+                FROM battles_s35_3
+                WHERE avg_rank > 15
+                UNION ALL
+                SELECT
+                    id,
+                    timestamp,
+                    map,
+                    mode,
+                    avg_rank,
+                    unnest(string_to_array(lTeam, '-')) AS brawler,
+                    'Defeat' AS result
+                FROM battles_s35_3
+                WHERE avg_rank > 15
+            ),
+            brawler_stats AS (
+                SELECT
+                    brawler,
+                    map,
+                    SUM(CASE WHEN result = 'Victory' THEN 1 ELSE 0 END) AS wins,
+                    SUM(CASE WHEN result = 'Defeat' THEN 1 ELSE 0 END) AS losses
+                FROM battle_data
+                GROUP BY brawler, map
+            )
+            SELECT
+                brawler,
+                map,
+                wins,
+                losses,
+                (wins + losses) AS total_matches,
+                (wins::FLOAT / NULLIF(wins + losses, 0)) * 100 AS win_rate,
+                (wins + losses)::FLOAT / (SELECT COUNT(*) * 6 FROM battles_s35_3 WHERE avg_rank > 15) * 100 AS usage_rate
+            FROM brawler_stats
+            ORDER BY map, win_rate DESC;
+        """        
+        conn = psycopg2.connect(
+            dbname='bs-project',            
+            user="postgres",
+            password=self.appConfig.POSTGRE_SQL_PASSWORD,
+            host="localhost",
+            port="5432"
+        )
+        if conn is None:
+            raise ConnectionError("Could not connect to database.")
+        df = pd.read_sql_query(query, conn)
+        print("DataFrame Retrieved : ", df.count)
+        conn.close()
+        return df
+    
+    def save_stats_battle(self, path):
+        print("Get stats from SQL DB...")
+        df = self.fetch_stats_battle_data()
+        print("Saving stats to file...")
+        df.to_pickle(path)
     
     def fetch_battle_data(self):
         conn = psycopg2.connect(
@@ -267,7 +333,7 @@ class NeuralNetworkService:
         
         print(f"Training complete. Final best validation loss: {best_val_loss:.4f}")
 
-    def predict_best_brawler(self, friends, enemies, map_name, excluded=[]):
+    def old_predict_best_brawler(self, friends, enemies, map_name, excluded=[], nbBrawlers=10):
         self.model.eval()
         pad_idx = self.model.pad_idx
         
@@ -301,10 +367,64 @@ class NeuralNetworkService:
                     logits[0, self.brawler_to_idx[b]] = -1e9  # Set very low logit to exclude
                     
             probs = F.softmax(logits, dim=1)
-            topk = torch.topk(probs, k=10, dim=1)
+            topk = torch.topk(probs, k=nbBrawlers, dim=1)
         
         # Return top-k brawlers with their probabilities
         return [(self.idx_to_brawler(idx), prob) for idx, prob in zip(topk.indices.squeeze(0).tolist(), topk.values.squeeze(0).tolist())]
+    
+    def predict_best_brawler(self, friends, enemies, map_name, excluded=[], nbBrawlers=10):
+        self.model.eval()
+        pad_idx = self.model.pad_idx
+        
+        # Convert brawler names to indices
+        friend_indices = [self.brawler_to_idx.get(b, pad_idx) for b in friends]
+        enemy_indices = [self.brawler_to_idx.get(b, pad_idx) for b in enemies]
+        
+        # Pad friends and enemies to match the model's expected input size
+        while len(friend_indices) < self.model.num_friends:
+            friend_indices.append(pad_idx)
+        while len(enemy_indices) < self.model.num_enemies:
+            enemy_indices.append(pad_idx)
+        
+        # Convert to tensors and move to the correct device
+        map_idx = torch.tensor([[self.map_to_idx.get(map_name, 0)]], dtype=torch.long).to(self.device)
+        friends_tensor = torch.tensor([friend_indices], dtype=torch.long).to(self.device)
+        enemies_tensor = torch.tensor([enemy_indices], dtype=torch.long).to(self.device)
+        
+        # Combine already picked and explicitly excluded brawlers
+        all_excluded = excluded.copy()
+        all_excluded.extend(friends)
+        all_excluded.extend(enemies)
+        
+        # Make predictions
+        with torch.no_grad():
+            # Get raw logits from the model
+            logits = self.model(friends_tensor, enemies_tensor, map_idx)
+            
+            # Convert logits to probabilities using softmax
+            probs = F.softmax(logits, dim=1)
+            
+            # Create a calibrated win rate estimate based on these probabilities
+            # A higher probability indicates a better chance of winning
+            win_rate_scores = probs.clone()
+            
+            # Exclude all brawlers that are already picked or in the excluded list
+            for b in all_excluded:
+                if b in self.brawler_to_idx:
+                    win_rate_scores[0, self.brawler_to_idx[b]] = 0.0
+            
+            # Get top-k brawlers
+            available_brawlers = sum(1 for b in self.brawler_to_idx if b not in all_excluded)
+            k = min(nbBrawlers, available_brawlers)
+            topk = torch.topk(win_rate_scores, k=k, dim=1)
+        
+        # Convert the probabilities to more intuitive win rate percentages (0-100%)
+        # Scaling to make the values more meaningful as win rates
+        win_rates = [(self.idx_to_brawler(idx), float(prob * 100)) 
+                    for idx, prob in zip(topk.indices.squeeze(0).tolist(), 
+                                        topk.values.squeeze(0).tolist())]
+        
+        return win_rates
     
     def predict_winrate(self, friends, enemies, map_name):
         """
@@ -355,4 +475,26 @@ class NeuralNetworkService:
             win_rate = 100 * (1 / (1 + torch.exp(torch.tensor(-relative_strength * scale, device=self.device)))).item()
 
         return round(win_rate, 2)
+    
+    def write_tier_list(self, tierlist_path):
+        dataScoring = []
+        for rankedMap in self.appConfig.dataMaps:
+            nbBrawlers = len(self.appConfig.dataIndex['brawlers'])
+            mapName = rankedMap['name']
+            excluded_brawlers = []
+            friend_brawlers = []
+            enemy_brawlers = []
+
+            row = {
+                "mapName": mapName,
+                "tierList": self.predict_best_brawler(friends=friend_brawlers, enemies=enemy_brawlers, map_name=mapName, excluded=excluded_brawlers, nbBrawlers=nbBrawlers-2)
+            }
+
+            dataScoring.append(row)
+
+        # Save to a JSON file (override mode)
+        with open(tierlist_path, "w") as json_file:
+            json.dump(dataScoring, json_file, indent=4)
+
+        print(f"Data saved to {tierlist_path}")
 

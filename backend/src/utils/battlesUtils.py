@@ -55,7 +55,7 @@ def extract_players_from_battle(postgreService, brawlers, b: Dict[str, Any]) -> 
                     player["brawler"]["trophies"] = None
                 if player["brawler"]["power"] == -1:
                     player["brawler"]["power"] = 0
-                player["brawler"]["name"] = player["brawler"].get("name") or brawlers.get(player["brawler"]["id"].upper())
+                player["brawler"]["name"] = player["brawler"].get("name") or brawlers.get(int(player["brawler"]["id"].upper()))
                 player_brawler = player["brawler"]["name"].replace("\n", " ")
                 tag = player["tag"]
                 last_rank = player["brawler"]["trophies"]
@@ -120,7 +120,7 @@ def transform_battle(postgreService, brawlers, b: Dict[str, Any], insertNewPlaye
                 if player["brawler"]["power"] == -1:
                     player["brawler"]["power"] = 0
 
-                player["brawler"]["name"] = player["brawler"].get("name") or brawlers.get(player["brawler"]["id"].upper())
+                player["brawler"]["name"] = player["brawler"].get("name") or brawlers.get(int(player["brawler"]["id"].upper()))
                 player["brawler"]["name"] = player["brawler"]["name"].replace("\n", " ")
                 avg_rank += player["brawler"]["trophies"]
 
@@ -163,6 +163,7 @@ def transform_battle(postgreService, brawlers, b: Dict[str, Any], insertNewPlaye
     lTeam = lTeam,
 
     #  def insert_battle_stats(self, id, timestamp, map, mode, avg_rank, wTeam, lTeam, result):
+    
     postgreService.insert_battle_stats(id, timestamp, map, mode, avg_rank, wTeam, lTeam, current_date)
 
 def check_brawler_name(name):

@@ -18,7 +18,7 @@ max_threads = 40
 processed_players = 0
 
 # Data
-brawlerData = read_json("data/brawlersMaps.json")
+brawlerData = read_json("./backend/data/brawlersMaps.json")
 brawler_map = {brawler['id']: brawler for brawler in brawlerData['brawlers']}
 
 # Main

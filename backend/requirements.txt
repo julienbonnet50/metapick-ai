@@ -9,3 +9,5 @@ Requests==2.32.3
 torch==2.6.0
 gunicorn==23.0.0
 tqdm==4.67.1
+google-auth==2.38.0
+google-auth-oauthlib==1.2.1

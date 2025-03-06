@@ -1,24 +1,14 @@
 "use client"
 import React, { useState, useEffect } from "react";
 import BrawlStarsDraft from "@components/BrawlStarsDraft";
-import HowToUse from "@components/HowToUse";
-import Navbar from "@components/Navbar";
-import { Analytics } from "@vercel/analytics/react"
 
-const App: React.FC = () => {
-  const [showHowToUse, setShowHowToUse] = useState<boolean>(false);
+const Home: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [retryCount, setRetryCount] = useState<number>(0);
   const [statusMessage, setStatusMessage] = useState<string>("Connecting to server...");
   
   // Define your BASE_URL
   const BASE_URL = process.env.NEXT_PUBLIC_ENDPOINT_BASE_URL || "https://metapick-ai.onrender.com";
-  console.log("BASE_URL", BASE_URL);
-
-
-  const toggleHowToUse = (): void => {
-    setShowHowToUse(!showHowToUse);
-  };
 
   useEffect(() => {
     const checkEndpoints = async () => {
@@ -26,9 +16,9 @@ const App: React.FC = () => {
         setStatusMessage("Connecting to server... This may take up to 2 minutes if the server was idle.");
         
         // Try to fetch from all endpoints
-        const brawlersPromise = fetch(`${BASE_URL}/get_brawlers`, { cache: "no-store" });
-        const mapsPromise = fetch(`${BASE_URL}/get_maps`, { cache: "no-store" });
-        const gameVersionsPromise = fetch(`${BASE_URL}/get_game_versions`, { cache: "no-store" });
+        const brawlersPromise = fetch(`${BASE_URL}/get_brawlers`, { cache: "force-cache" });
+        const mapsPromise = fetch(`${BASE_URL}/get_maps`, { cache: "force-cache" });
+        const gameVersionsPromise = fetch(`${BASE_URL}/get_game_versions`, { cache: "force-cache" });
         
         const [brawlersResponse, mapsResponse, gameVersionsResponse] = await Promise.all([
           brawlersPromise, 
@@ -84,7 +74,7 @@ const App: React.FC = () => {
     const scheduleRetry = () => {
       setTimeout(() => {
         setRetryCount(prev => prev + 1);
-      }, 20000); // Retry every 5 seconds
+      }, 20000); // Retry every 20 seconds
     };
     
     checkEndpoints();
@@ -104,18 +94,11 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col">
-      {/* Navbar Component */}
-      <Navbar toggleHowToUse={toggleHowToUse} showHowToUse={showHowToUse} />
-      
-      {/* Conditionally render HowToUse Component */}
-      {showHowToUse && <HowToUse />}
-      
+    <main className="flex flex-col">
       {/* Main Content */}
       <BrawlStarsDraft />
-      <Analytics />
-    </div>
+    </main>
   );
 };
 
-export default App;
+export default Home;

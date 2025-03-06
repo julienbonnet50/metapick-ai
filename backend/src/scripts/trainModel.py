@@ -16,7 +16,7 @@ version = "35_3"
 # Construct the correct paths using BASE_DIR
 data_path = os.path.join(BASE_DIR, "data", "model", f"version_{version}", "mappings.pkl")
 model_path = os.path.join(BASE_DIR, "data", "model", f"version_{version}", "nn_model_all.pth")
-
+tierlist_path = os.path.join(BASE_DIR, "data", "model", f"version_{appConfig.game_version}", "tierlist.json")
 
 neuralNetworkService = NeuralNetworkService.NeuralNetworkService(data_path=data_path, 
                                                                  model_path=model_path, 
@@ -27,7 +27,10 @@ neuralNetworkService = NeuralNetworkService.NeuralNetworkService(data_path=data_
 # Train the model
 neuralNetworkService.train_model(num_epochs=15, batch_size=64, num_friends=3, num_enemies=3)
 neuralNetworkService.save_mappings(neuralNetworkService.data_path)
+neuralNetworkService.write_tier_list(tierlist_path)
 
+
+# Test prediction
 friends = []
 enemies = []
 map_name = "Below Zero"

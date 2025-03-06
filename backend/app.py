@@ -1,32 +1,40 @@
 import json
 import os
 import sys
+import requests
 sys.path.append(os.getcwd())
 sys.path.append(os.path.abspath(os.path.dirname(p=__file__)))
 import re
 import time
-from flask import Flask, jsonify, request, render_template, send_from_directory
+from flask import Flask, jsonify, redirect, request, render_template, send_from_directory
 import pandas as pd
 from flask_cors import CORS
+from flask import Flask, redirect, url_for, session, request, jsonify
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+import requests
+import os
+
 
 from src.config.AppConfig import AppConfig
 from src.service import NeuralNetworkService
 
 import os
 
-# Get the absolute path to the project root directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(__name__)
 
-# TODO: Remove for production
-
-# Replace with : CORS(app, resources={r"/*": {"origins": "https://metapick-ai.vercel.app"}})
+# For local development :
 CORS(app, resources={r"/*": {"origins": "*"}})
+
+# For production :
+# CORS(app, supports_credentials=True, origins=["https://metapick-ai.vercel.app"])
+
 appConfig = AppConfig()
 
-
 # Construct the correct paths using BASE_DIR
+app.secret_key = appConfig.SECRET_KEY
 data_path = os.path.join(BASE_DIR, "data", "model", f"version_{appConfig.game_version}", "mappings.pkl")
 model_path = os.path.join(BASE_DIR, "data", "model", f"version_{appConfig.game_version}", "nn_model_all.pth")
 
@@ -43,6 +51,76 @@ neuralNetworkService = NeuralNetworkService.NeuralNetworkService(data_path=data_
                                                                  model_path=model_path, 
                                                                  version=appConfig.game_version,
                                                                  appConfig=appConfig)
+
+
+# ===========================
+# GOOGLE AUTHENTICATION
+# ===========================
+
+# @app.route("/auth/login")
+# def login():
+#     """Redirect to Google OAuth login"""
+#     google_auth_url = (
+#         "https://accounts.google.com/o/oauth2/auth?"
+#         "response_type=code"
+#         f"&client_id={appConfig.GOOGLE_CLIENT_ID}"
+#         f"&redirect_uri={appConfig.REDIRECT_URI}"
+#         "&scope=email%20profile"
+#     )
+#     return redirect(google_auth_url)
+
+
+# @app.route("/auth/google")  # ✅ This must match your Google Console URI exactly
+# def google_callback():
+#     """Handle Google OAuth callback and exchange code for token"""
+#     code = request.args.get("code")
+#     if not code:
+#         return jsonify({"error": "Authorization code not provided"}), 400
+
+#     # Exchange code for tokens
+#     token_url = "https://oauth2.googleapis.com/token"
+#     token_data = {
+#         "code": code,
+#         "client_id": appConfig.GOOGLE_CLIENT_ID,
+#         "client_secret": appConfig.GOOGLE_CLIENT_SECRET,
+#         "redirect_uri": appConfig.REDIRECT_URI,  # Must match Google Console
+#         "grant_type": "authorization_code",
+#     }
+#     token_res = requests.post(token_url, data=token_data)
+
+#     if token_res.status_code != 200:
+#         return jsonify({"error": "Failed to retrieve token", "details": token_res.text}), 400
+
+#     token_json = token_res.json()
+
+#     # Verify the token and get user info
+#     try:
+#         id_info = id_token.verify_oauth2_token(
+#             token_json.get("id_token"), google_requests.Request(), appConfig.GOOGLE_CLIENT_ID
+#         )
+#     except ValueError:
+#         return jsonify({"error": "Invalid token"}), 400
+
+#     session["user"] = id_info  # Save user session
+
+#     return redirect(url_for("/"))
+
+
+
+# @app.route("/auth/logout")
+# def logout():
+#     """Clear session on logout"""
+#     session.clear()
+#     return jsonify({"message": "Logged out successfully"})
+
+
+# @app.route("/auth/user")
+# def get_user():
+#     """Return user info if logged in"""
+#     user = session.get("user")
+#     if not user:
+#         return jsonify({"error": "User not logged in"}), 401
+#     return jsonify(user)
 
 @app.route('/')
 def index():
@@ -134,6 +212,29 @@ def predict_winrate():
 
         return str(predicted_winrate)
 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/tier_list', methods=['POST'])
+def get_tier_list():
+    try: 
+        data = request.get_json()
+        mapName = data.get('map', '')
+        
+        for item in appConfig.dataTierList:
+            if item['mapName'] == mapName:
+                return  jsonify(item['tierList'])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/stats', methods=['POST'])
+def get_stats_per_map():
+    try: 
+        data = request.get_json()
+        mapName = data.get('map', '')
+        
+        filteredDf = appConfig.battleStats[appConfig.battleStats["map"] == mapName] if mapName else appConfig.battleStats
+        return filteredDf.to_dict(orient="records")
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

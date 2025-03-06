@@ -1,13 +1,17 @@
+/* Importing Tailwind's base, components, and utilities */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Custom global styles */
 body {
+  /* Custom properties (ensure these variables are defined somewhere) */
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Brawl Stars Roboto", sans-serif; /* Default font */
 }
 
+/* Custom fonts */
 @font-face {
   font-family: "Brawl Stars Lilita One";
   src: url("/LilitaOne-Regular.ttf") format("truetype");
@@ -18,6 +22,7 @@ body {
   src: url("/Roboto.ttf") format("truetype");
 }
 
+/* Optional: Custom fonts fallback */
 body {
   font-family: "Brawl Stars Roboto", sans-serif;
 }

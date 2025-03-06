@@ -2,29 +2,11 @@
 import React, { useEffect, useState } from "react";
 import Image from 'next/image';
 import { fetchBrawlers, fetchMaps } from "../utils/api";
+import SelectMap from "./SelectMap";
 
 const BASE_URL = process.env.NEXT_PUBLIC_ENDPOINT_BASE_URL || "https://metapick-ai.onrender.com";
 console.log("BASE_URL", BASE_URL);
 
-// Define the Brawler type
-interface Brawler {
-  id: number;
-  name: string;
-  imageUrl: string;
-}
-
-interface Map {
-  name: string,
-  gameMode: string,
-  imageUrl: string
-}
-
-// Define Submission Result type
-interface SubmissionBrawler {
-  name: string;
-  score: number;
-  imageUrl: string;
-}
 
 const safeToFixed = (value: number, decimals: number = 2) => {
   return typeof value === 'number' ? value.toFixed(decimals) : 'N/A';
@@ -32,7 +14,7 @@ const safeToFixed = (value: number, decimals: number = 2) => {
 
 const BrawlStarsDraft = () => {
   const [brawlers, setBrawlers] = useState<Brawler[]>([]);
-  const [mapsData, setMaps] = useState<Map[]>([]);
+  const [mapsData, setMaps] = useState<MapBs[]>([]);
   const [selectedMap, setSelectedMap] = useState<string>("");
   const [teamA, setTeamA] = useState<Brawler[]>([]);
   const [teamB, setTeamB] = useState<Brawler[]>([]);
@@ -51,10 +33,19 @@ const BrawlStarsDraft = () => {
 
       // Sort the remaining brawlers and custom exclusion
       const excludedBrawlerName = 'Lumi';
-      const filteredBrawlers = brawlersData.filter((brawler: Brawler) => brawler.name !== excludedBrawlerName);
+      const filteredBrawlers = brawlersData
+        .filter((brawler: Brawler) => brawler.name !== excludedBrawlerName)
+        .map((brawler: Brawler) => {
+          // Rename "LARRY & LAWRIE" to "Larry"
+          if (brawler.name === "LARRY & LAWRIE") {
+            return { ...brawler, name: "Larry" }; // Return a new object with the name updated
+          }
+          return brawler;
+        });
+
 
       const sortedBrawlers = filteredBrawlers.sort((a: Brawler, b: Brawler) => a.name.localeCompare(b.name));
-      const sortedMaps = mapsData.sort((a: Map, b: Map) => {
+      const sortedMaps = mapsData.sort((a: MapBs, b: MapBs) => {
         const gameModeComparison = a.gameMode.localeCompare(b.gameMode);
 
         if (gameModeComparison === 0) {
@@ -308,23 +299,11 @@ const BrawlStarsDraft = () => {
       <div className="flex space-x-4 mb-8">
         {/* Map Selection */}
         <div className="flex-1">
-          <label className="label">
-            <span className="label-text">Select Map</span>
-          </label>
-          <select
-            className="select select-bordered w-96 text-lg py-2 px-4 rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onChange={handleMapChange}
-            value={selectedMap}
-          >
-            <option value="" className="text-gray-500">
-              Select a map
-            </option>
-            {mapsData.map((map: Map, index) => (
-              <option key={index} value={map.name}>
-                {map.gameMode} - {map.name}
-              </option>
-            ))}
-          </select>
+          <SelectMap
+            mapsData={mapsData}
+            selectedMap={selectedMap}
+            handleMapChange={handleMapChange}
+          />
         </div>
         {/* Account Tag Selection */}
         {/* <div className="flex-1">
@@ -538,7 +517,7 @@ const BrawlStarsDraft = () => {
                       </div>
                       <h3 className="card-title text-lg font-semibold mt-2">{brawler.name}</h3>
                       <p className="text-s font-bold text-primary">
-                        Score: {safeToFixed(brawler.score * 1000, 3)}
+                        Score: {safeToFixed(brawler.score * 10, 3)}
                       </p>
                     </div>
                   </div>
@@ -596,7 +575,7 @@ const BrawlStarsDraft = () => {
                 alt={brawler.name}
                 className="w-18 h-18"
               />
-              <p className="text-s font-medium truncate w-full text-center">{brawler.name}</p>
+              <p className="text-sm font-medium w-full text-center overflow-hidden whitespace-nowrap text-ellipsis">{brawler.name}</p>
             </div>
           );
         })}

@@ -1032,13 +1032,13 @@
       {
         "id": 16000077,
         "avatarId": 28000387,
-        "name": "Larry & Lawrie",
-        "hash": "Larry-&-Lawrie",
-        "path": "Larry-&-Lawrie",
+        "name": "LARRY & LAWRIE",
+        "hash": "LARRY & LAWRIE",
+        "path": "LARRY & LAWRIE",
         "fankit": "larry&lawrie",
         "released": true,
         "version": 1,
-        "link": "https://brawlify.com/brawlers/detail/Larry-&-Lawrie",
+        "link": "https://brawlify.com/brawlers/detail/LARRY & LAWRIE",
         "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000077.png",
         "imageUrl2": "https://cdn.brawlify.com/brawlers/borderless/16000077.png",
         "imageUrl3": "https://cdn.brawlify.com/brawlers/emoji/16000077.png",
@@ -1813,9 +1813,9 @@
       {
         "id": 16000066,
         "avatarId": 28000245,
-        "name": "R-T",
-        "hash": "R-T",
-        "path": "R-T",
+        "name": "RT",
+        "hash": "RT",
+        "path": "RT",
         "fankit": "rt",
         "released": true,
         "version": 1,
@@ -4440,13 +4440,13 @@
       {
         "id": 16000027,
         "avatarId": 28000043,
-        "name": "8-Bit",
-        "hash": "8-Bit",
-        "path": "8-Bit",
+        "name": "8Bit",
+        "hash": "8Bit",
+        "path": "8Bit",
         "fankit": "8bit",
         "released": true,
         "version": 1,
-        "link": "https://brawlify.com/brawlers/detail/8-Bit",
+        "link": "https://brawlify.com/brawlers/detail/8Bit",
         "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000027.png",
         "imageUrl2": "https://cdn.brawlify.com/brawlers/borderless/16000027.png",
         "imageUrl3": "https://cdn.brawlify.com/brawlers/emoji/16000027.png",
@@ -4460,8 +4460,8 @@
           "color": "#5ab3ff"
         },
         "unlock": null,
-        "description": "An arcade game famous for its brutal difficulty, 8-Bit always hated its players. Now that it's missing one of its guns, it's angrier than ever before.",
-        "descriptionHtml": "An arcade game famous for its brutal difficulty, 8-Bit always hated its players. Now that it's missing one of its guns, it's angrier than ever before.",
+        "description": "An arcade game famous for its brutal difficulty, 8Bit always hated its players. Now that it's missing one of its guns, it's angrier than ever before.",
+        "descriptionHtml": "An arcade game famous for its brutal difficulty, 8Bit always hated its players. Now that it's missing one of its guns, it's angrier than ever before.",
         "starPowers": [
           {
             "id": 23000168,
@@ -4478,8 +4478,8 @@
             "name": "Plugged In",
             "path": "Plugged-In",
             "version": 1,
-            "description": "When 8-Bit is near his Damage Booster, he will plug in and have increased movement speed.",
-            "descriptionHtml": "When 8-Bit is near his Damage Booster, he will plug in and have increased movement speed.",
+            "description": "When 8Bit is near his Damage Booster, he will plug in and have increased movement speed.",
+            "descriptionHtml": "When 8Bit is near his Damage Booster, he will plug in and have increased movement speed.",
             "imageUrl": "https://cdn.brawlify.com/star-powers/borderless/23000181.png",
             "released": true
           }
@@ -4490,8 +4490,8 @@
             "name": "Cheat Cartridge",
             "path": "Cheat-Cartridge",
             "version": 1,
-            "description": "8-Bit instantly teleports to his Damage Booster.",
-            "descriptionHtml": "8-Bit instantly teleports to his Damage Booster.",
+            "description": "8Bit instantly teleports to his Damage Booster.",
+            "descriptionHtml": "8Bit instantly teleports to his Damage Booster.",
             "imageUrl": "https://cdn.brawlify.com/gadgets/borderless/23000259.png",
             "released": true
           },
@@ -4500,8 +4500,8 @@
             "name": "Extra Credits",
             "path": "Extra-Credits",
             "version": 1,
-            "description": "8-Bit's next attack has the number of projectiles increased to x.",
-            "descriptionHtml": "8-Bit's next attack has the number of projectiles increased to \u003Cspan style=\"color:#00cc00;\"\u003Ex\u003C/span\u003E.",
+            "description": "8Bit's next attack has the number of projectiles increased to x.",
+            "descriptionHtml": "8Bit's next attack has the number of projectiles increased to \u003Cspan style=\"color:#00cc00;\"\u003Ex\u003C/span\u003E.",
             "imageUrl": "https://cdn.brawlify.com/gadgets/borderless/23000318.png",
             "released": true
           }

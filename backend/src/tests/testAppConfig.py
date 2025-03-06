@@ -14,5 +14,5 @@ from backend.src.config import AppConfig
 # Main variables
 appConfig = AppConfig.AppConfig()
 
-print(appConfig.dataMaps)
+print(appConfig)
 

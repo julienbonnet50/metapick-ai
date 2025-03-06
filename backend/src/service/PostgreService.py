@@ -70,7 +70,7 @@ class PostgreService():
 
         # Convert to a 'yyyy-mm-dd' string
         formatted_date = date.strftime("%Y-%m-%d")
-        tableName = self.get_correct_battle_version(formatted_date, self.appConfig.data_game_version)
+        tableName = self.get_correct_battle_version(formatted_date, self.appConfig.data_all_game_version)
         insert_query = f"""
         INSERT INTO {tableName} (id, timestamp, map, mode, avg_rank, wTeam, lTeam, insert_date)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
@@ -168,7 +168,7 @@ class PostgreService():
         else:
             placeHolder = ">"
 
-        select_query = f"SELECT * FROM dbo.players WHERE last_rank {placeHolder} {rank};"
+        select_query = f"SELECT * FROM dbo.players WHERE last_rank {placeHolder} {rank} OR max_rank {placeHolder} {rank};"
         try:
             if self.cursor is None or self.conn is None:
                 return "Database connection is not established"
