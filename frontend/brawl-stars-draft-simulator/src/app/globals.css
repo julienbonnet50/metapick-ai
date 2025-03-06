@@ -26,3 +26,22 @@ body {
 body {
   font-family: "Brawl Stars Roboto", sans-serif;
 }
+
+/* Add this CSS to your global stylesheet (styles/globals.css) or inline in the component */
+@keyframes moveUp {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-30px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes moveLeftRight {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(20px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes scaleUp {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}

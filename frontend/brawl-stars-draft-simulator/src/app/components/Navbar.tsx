@@ -63,6 +63,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
     { name: 'Draft tool', path: '/' },
     { name: 'Stats', path: '/stats' },
     { name: 'Tier List', path: '/tier-list' },
+    { name: 'Star drop simulator', path: '/star-drop-simulator'},
     { name: 'About', path: '/about' },
   ];
 
