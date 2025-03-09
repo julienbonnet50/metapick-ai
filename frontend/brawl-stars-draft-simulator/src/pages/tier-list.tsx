@@ -182,7 +182,7 @@ const TierListPage: React.FC = () => {
                                   height={150}
                                   src={brawler.imageUrl} // Image URL for the brawler
                                   alt={brawlerName}
-                                  className="h-16 object-contain mx-auto"
+                                  className="h-14 sm:h-10 md:h-10 lg:h-14 xl:h-18 object-contain mx-auto"
                                 />
                                 <h3 className="font-bold text-center truncate" title={brawlerName}>{brawlerName}</h3>
                                 <div className="text-center opacity-70">{score.toFixed(2)}</div>

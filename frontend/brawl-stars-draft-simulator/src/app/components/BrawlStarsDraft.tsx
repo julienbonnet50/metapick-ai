@@ -492,7 +492,7 @@ const BrawlStarsDraft = () => {
         <div className="lg:w1/6">
           {submissionResult && (
             <div className="card bg-base-200 shadow-md p-4">
-              <h2 className="text-xl font-bold mb-4 text-center">
+              <h2 className="text-xl md:text-lg sm:text-sm font-bold mb-4 text-center">
                 Best 10 Brawlers for <span className="text-primary">{selectedMap}</span> by AI Score
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -507,7 +507,7 @@ const BrawlStarsDraft = () => {
                         height={64}
                         src={brawler.imageUrl}
                         alt={brawler.name}
-                        className="w-16 h-16 object-cover rounded-full border-2 border-primary gap-1"
+                        className="w-16 h-16 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 object-cover rounded-full border-2 border-primary gap-1"
                       />
                     </figure>
                     <div className="card-body items-center text-center p-4">
@@ -516,7 +516,7 @@ const BrawlStarsDraft = () => {
                         #{index + 1}
                       </div>
                       <h3 className="card-title text-lg font-semibold mt-2">{brawler.name}</h3>
-                      <p className="text-s font-bold text-primary">
+                      <p className="text-s md:text-lg sm:text- font-bold text-primary">
                         Score: {safeToFixed(brawler.score * 10, 3)}
                       </p>
                     </div>

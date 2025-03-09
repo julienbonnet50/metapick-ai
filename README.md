@@ -1,5 +1,7 @@
 # Meta Pick AI
-![alt text](assets/image.png)
+
+![alt text](assets/screen.png)
+
 ## Description
 Meta Pick AI is a web-based tool designed to help players improve their ranked gameplay by optimizing their draft picks. With a **Flask backend** powered by a **Neural Network trained on millions of games (using PyTorch)**, the system predicts the **top 10 best brawlers** to pick for a given map, considering ally picks, enemy picks, and bans. The frontend is built using **React, TailwindCSS, and DaisyUI** to ensure a smooth and user-friendly experience.
 
