@@ -372,7 +372,7 @@ class NeuralNetworkService:
         # Return top-k brawlers with their probabilities
         return [(self.idx_to_brawler(idx), prob) for idx, prob in zip(topk.indices.squeeze(0).tolist(), topk.values.squeeze(0).tolist())]
     
-    def predict_best_brawler(self, friends, enemies, map_name, excluded=[], nbBrawlers=10):
+    def predict_best_brawler(self, friends, enemies, map_name, excluded=[], nbBrawlers=10, available_brawlers=[]):
         self.model.eval()
         pad_idx = self.model.pad_idx
         
@@ -405,24 +405,37 @@ class NeuralNetworkService:
             probs = F.softmax(logits, dim=1)
             
             # Create a calibrated win rate estimate based on these probabilities
-            # A higher probability indicates a better chance of winning
-            win_rate_scores = probs.clone()
+            win_rate_scores = torch.zeros_like(probs)
             
-            # Exclude all brawlers that are already picked or in the excluded list
-            for b in all_excluded:
-                if b in self.brawler_to_idx:
-                    win_rate_scores[0, self.brawler_to_idx[b]] = 0.0
+            # Only consider brawlers in available_brawlers list if provided
+            if available_brawlers:
+                # Only set scores for brawlers in available_brawlers and not in excluded
+                for brawler_name in available_brawlers:
+                    if brawler_name in self.brawler_to_idx and brawler_name not in all_excluded:
+                        idx = self.brawler_to_idx[brawler_name]
+                        win_rate_scores[0, idx] = probs[0, idx]
+            else:
+                # If no available_brawlers provided, use all except excluded
+                win_rate_scores = probs.clone()
+                for b in all_excluded:
+                    if b in self.brawler_to_idx:
+                        win_rate_scores[0, self.brawler_to_idx[b]] = 0.0
             
-            # Get top-k brawlers
-            available_brawlers = sum(1 for b in self.brawler_to_idx if b not in all_excluded)
-            k = min(nbBrawlers, available_brawlers)
-            topk = torch.topk(win_rate_scores, k=k, dim=1)
-        
-        # Convert the probabilities to more intuitive win rate percentages (0-100%)
-        # Scaling to make the values more meaningful as win rates
-        win_rates = [(self.idx_to_brawler(idx), float(prob * 100)) 
-                    for idx, prob in zip(topk.indices.squeeze(0).tolist(), 
-                                        topk.values.squeeze(0).tolist())]
+            # Get the number of brawlers with non-zero scores
+            non_zero_count = (win_rate_scores > 0).sum().item()
+            k = min(nbBrawlers, non_zero_count)
+            
+            if k > 0:
+                # Get top-k brawlers
+                topk = torch.topk(win_rate_scores, k=k, dim=1)
+                
+                # Convert the probabilities to more intuitive win rate percentages (0-100%)
+                win_rates = [(self.idx_to_brawler(idx), float(prob * 100))
+                            for idx, prob in zip(topk.indices.squeeze(0).tolist(),
+                                                topk.values.squeeze(0).tolist())
+                            if prob > 0]  # Only include brawlers with non-zero probability
+            else:
+                win_rates = []
         
         return win_rates
     

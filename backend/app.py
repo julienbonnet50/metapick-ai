@@ -1,24 +1,14 @@
-import json
 import os
 import sys
-import requests
 sys.path.append(os.getcwd())
 sys.path.append(os.path.abspath(os.path.dirname(p=__file__)))
-import re
 import time
-from flask import Flask, jsonify, redirect, request, render_template, send_from_directory
-import pandas as pd
+from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
-from flask import Flask, redirect, url_for, session, request, jsonify
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
-import requests
-import os
-
-
+from flask import Flask, request, jsonify
 from src.config.AppConfig import AppConfig
 from src.service import NeuralNetworkService
-
+from src.utils import battlesUtils
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -151,12 +141,13 @@ def simulate_draft():
         mapName = data.get('map', '')
         
         # Use getlist() to retrieve all values for multi-select fields
-        excluded_brawlers = [b.strip().upper() for b in data.get('excluded_brawlers')]
+        available_brawlers = [b.strip().upper() for b in data.get('available_brawlers', [])]
+        excluded_brawlers = [b.strip().upper() for b in data.get('excluded_brawlers', [])]
         friend_brawlers = [b.strip().upper() for b in data.get('initial_team')]
         enemy_brawlers = [b.strip().upper() for b in data.get('initial_opponent')]
 
         # Get predictions
-        top10_brawlers = neuralNetworkService.predict_best_brawler(friend_brawlers, enemy_brawlers, mapName, excluded_brawlers)
+        top10_brawlers = neuralNetworkService.predict_best_brawler(friend_brawlers, enemy_brawlers, mapName, excluded_brawlers, available_brawlers=available_brawlers)
 
         brawlerImgUrl = []
         for brawler in top10_brawlers:
@@ -170,6 +161,7 @@ def simulate_draft():
         if appConfig.logs_level > 0:
             print("============ /simulate_draft response ============")
             print(f"Map : {mapName}")
+            print(f"Available Brawlers : {available_brawlers}")
             print(f"Excluded Brawlers : {excluded_brawlers}")
             print(f"Friend Brawlers : {friend_brawlers}")
             print(f"Enemy Brawlers : {enemy_brawlers}")
@@ -231,6 +223,18 @@ def get_stats_per_map():
         
         filteredDf = appConfig.battleStats[appConfig.battleStats["map"] == mapName] if mapName else appConfig.battleStats
         return filteredDf.to_dict(orient="records")
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/account', methods=['POST'])
+def get_accountBrawlers():
+    try: 
+        data = request.get_json()
+        player_tag = data.get('player_tag', '')
+        dataBrawlerAccount = battlesUtils.get_account_brawlers(player_tag=player_tag, API_KEY=appConfig.API_KEY, BASE_URL=appConfig.BASE_URL)
+        
+        return battlesUtils.get_brawlers_with_high_power(dataBrawlerAccount)
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

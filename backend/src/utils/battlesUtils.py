@@ -6,6 +6,8 @@ import uuid
 import requests
 
 
+# =========== Account Battles log ===========
+
 def get_battle_log(player_tag, API_KEY, BASE_URL, writeEnabled=False):
     player_tag = player_tag.replace("#", "%23")  # Encode '#' as '%23'
     url = f"{BASE_URL}/players/{player_tag}/battlelog"
@@ -39,6 +41,41 @@ def get_all_battles_from_tag(player_tag, postgreService, brawlers, API_KEY, BASE
     except Exception as e:
         print(e)
 
+# =========== Account Brawlers ===========
+def get_account_brawlers(player_tag, API_KEY, BASE_URL, writeEnabled=False):
+    if not player_tag.startswith("#"):
+        player_tag = "#" + player_tag
+
+    player_tag = player_tag.replace("#", "%23")  # Encode '#' as '%23'
+    url = f"{BASE_URL}/players/{player_tag}"
+
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Accept": "application/json"
+    }
+
+    response = requests.get(url, headers=headers)
+    
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return {"error": response.status_code, "message": response.text}
+
+def get_brawlers_with_high_power(data):
+    # Initialize an empty list to store the names of brawlers with power greater than 10
+    brawlers_with_high_power = []
+    
+    # Iterate over each brawler in the brawlers list
+    for brawler in data['brawlers']:
+        # Check if the brawler's power is greater than 9 and got at least 1 stars Power
+        if brawler['power'] > 9 and brawler['starPowers'] != []:
+            # If it is, append the brawler's name to the result list
+            brawlers_with_high_power.append(brawler['name'])
+    
+    return brawlers_with_high_power
+
+
+# =========== Extract data from battles ===========
 def extract_players_from_battle(postgreService, brawlers, b: Dict[str, Any]) -> Dict[str, Any]:
     # Get the current date
     current_date = datetime.now().date().strftime('%Y-%m-%d')
