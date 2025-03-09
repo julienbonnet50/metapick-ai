@@ -3,46 +3,21 @@ import React, { useEffect, useState } from "react";
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { fetchGameVersions } from "../utils/api";
+import { useDataContext } from "./DataProviderContext";
+import ClientLayout from "./ClientLayout";
 
 interface NavbarProps {
   toggleHowToUse: () => void;
   showHowToUse: boolean;
 }
 
-interface GameVersion {
-  version: string;
-  count: number
-  date: string;
-  name: string;
-  description: string;
-  ranked_maps: string[];
-}
-
-const BASE_URL = process.env.NEXT_PUBLIC_ENDPOINT_BASE_URL || "https://metapick-ai.onrender.com";
 
 const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
-  const [latestVersion, setLatestVersion] = useState<GameVersion | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  {/* Data */}
+  const { isLoading, latestVersion } = useDataContext();
+
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const pathname = usePathname();
-
-  useEffect(() => {
-    const loadGameVersion = async () => {
-      try {
-        setIsLoading(true);
-        const gameVersionData = await fetchGameVersions(BASE_URL);
-        setLatestVersion(gameVersionData);
-        
-      } catch (error: unknown) {
-        console.error('Error fetching game versions:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadGameVersion();
-  }, []);
   
   // Format date to be more readable
   const formatDate = (dateString: string) => {
@@ -60,7 +35,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
 
   // Navigation links
   const navLinks = [
-    { name: 'Draft tool', path: '/' },
+    { name: 'Draft tool', path: '/draft-tool' },
     { name: 'Stats', path: '/stats' },
     { name: 'Tier List', path: '/tier-list' },
     { name: 'Star drop simulator', path: '/star-drop-simulator'},
@@ -68,7 +43,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
   ];
 
   return (
-    <nav className="bg-yellow-950 text-amber-50 p-4 shadow-md" style={{ fontFamily: 'Roboto, sans-serif' }}>
+      <nav className="bg-yellow-950 text-amber-50 p-4 shadow-md" style={{ fontFamily: 'Roboto, sans-serif' }}>
       <div className="container mx-auto flex flex-wrap justify-between items-center">
         {/* Left side - Logo and Title */}
         <div className="flex items-center">
@@ -172,7 +147,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
           </div>
         </div>
       )}
-    </nav>
+    </nav>   
   );
 };
 

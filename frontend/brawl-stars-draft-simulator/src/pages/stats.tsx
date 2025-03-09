@@ -5,13 +5,13 @@ import Image from 'next/image';
 import SelectMap from "@components/SelectMap";
 import { fetchBrawlers, fetchMaps } from "app/utils/api";
 import CoffeeWaiting from "@components/CoffeeWaiting";
+import { useDataContext } from "@components/DataProviderContext";
 
 const StatsPage: React.FC = () => {
-    const [isLoading, setIsLoading] = useState(true);
+    const { brawlers, maps, isLoading, baseUrl } = useDataContext();
+    
     const [statsData, setStatsData] = useState<any>(null);
-    const [brawlers, setBrawlers] = useState<Brawler[]>([]);
     const [selectedMap, setSelectedMap] = useState<string>("");
-    const [mapsData, setMaps] = useState<MapBs[]>([]);
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'brawler', direction: 'asc' });
     const [brawlerFilter, setBrawlerFilter] = useState("");
     const [minTotalMatches, setMinTotalMatches] = useState<number>(0); // New state for minimum total matches
@@ -22,7 +22,7 @@ const StatsPage: React.FC = () => {
 
         if (selectedMapValue) {
             try {
-                const response = await fetch(`${BASE_URL}/stats`, {
+                const response = await fetch(`${baseUrl}/stats`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -38,32 +38,6 @@ const StatsPage: React.FC = () => {
             }
         }
     };
-
-    const BASE_URL = process.env.NEXT_PUBLIC_ENDPOINT_BASE_URL || "https://metapick-ai.onrender.com";
-
-    useEffect(() => {
-        const loadData = async () => {
-            const brawlersData = await fetchBrawlers(BASE_URL);
-            const mapsData = await fetchMaps(BASE_URL);
-
-            const excludedBrawlerName = 'Lumi';
-            const filteredBrawlers = brawlersData.filter((brawler: Brawler) => brawler.name !== excludedBrawlerName);
-            const sortedBrawlers = filteredBrawlers.sort((a: Brawler, b: Brawler) => a.name.localeCompare(b.name));
-            const sortedMaps = mapsData.sort((a: MapBs, b: MapBs) => {
-                const gameModeComparison = a.gameMode.localeCompare(b.gameMode);
-                if (gameModeComparison === 0) {
-                    return a.name.localeCompare(b.name);
-                }
-                return gameModeComparison;
-            });
-
-            setBrawlers(sortedBrawlers);
-            setMaps(sortedMaps);
-            setIsLoading(false);
-        };
-
-        loadData();
-    }, []);
 
     const handleSort = (key: string) => {
         const direction = sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc';
@@ -116,7 +90,7 @@ const StatsPage: React.FC = () => {
                     <div className="w-1/3">
                         <h1 className="card-title text-xl font-bold text-primary mb-2">Ranked maps statistics</h1>
                         <SelectMap
-                            mapsData={mapsData}
+                            mapsData={maps}
                             selectedMap={selectedMap}
                             handleMapChange={handleMapChange}
                         />
@@ -212,7 +186,7 @@ const StatsPage: React.FC = () => {
                     </div>
                 ) : (
                     !isLoading && (
-                        <CoffeeWaiting />
+                        <CoffeeWaiting name="ranked stats" description="The 'Stats' will show the raw data of brawlers winRate, useRate, wins and losses per map "></CoffeeWaiting>
                     )
                 )}
             </main>

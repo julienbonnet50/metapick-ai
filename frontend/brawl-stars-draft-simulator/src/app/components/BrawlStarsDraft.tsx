@@ -1,20 +1,19 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Image from 'next/image';
-import { fetchBrawlers, fetchMaps } from "../utils/api";
 import SelectMap from "./SelectMap";
-
-const BASE_URL = process.env.NEXT_PUBLIC_ENDPOINT_BASE_URL || "https://metapick-ai.onrender.com";
-console.log("BASE_URL", BASE_URL);
-
+import { X, CheckCircle2, AlertOctagonIcon} from "lucide-react";
+import { useDataContext } from "./DataProviderContext";
 
 const safeToFixed = (value: number, decimals: number = 2) => {
   return typeof value === 'number' ? value.toFixed(decimals) : 'N/A';
 };
 
 const BrawlStarsDraft = () => {
-  const [brawlers, setBrawlers] = useState<Brawler[]>([]);
-  const [mapsData, setMaps] = useState<MapBs[]>([]);
+  {/* Data */}
+  const { brawlers, maps, baseUrl } = useDataContext();
+
+  {/* Frontend user */}
   const [selectedMap, setSelectedMap] = useState<string>("");
   const [teamA, setTeamA] = useState<Brawler[]>([]);
   const [teamB, setTeamB] = useState<Brawler[]>([]);
@@ -25,41 +24,17 @@ const BrawlStarsDraft = () => {
   const [winRate, setWinRate] = useState<number | null>(null);
   const [isLoadingWinRate, setIsLoadingWinRate] = useState<boolean>(false);
 
-  // Fetch data on component mount
-  useEffect(() => {
-    const loadData = async () => {
-      const brawlersData = await fetchBrawlers(BASE_URL);
-      const mapsData = await fetchMaps(BASE_URL);
+  {/* User account */}
+  const [availableBrawlers, setAvailableBrawlers] = useState<Brawler[]>([]);
+  const [accountTag, setAccountTag] = useState("");
+  const [isAccountTagValid, setAccountTagValid] = useState<boolean | null>(null);
+  const STORAGE_KEY = "accountTag"; // Key for localStorage
 
-      // Sort the remaining brawlers and custom exclusion
-      const excludedBrawlerName = 'Lumi';
-      const filteredBrawlers = brawlersData
-        .filter((brawler: Brawler) => brawler.name !== excludedBrawlerName)
-        .map((brawler: Brawler) => {
-          // Rename "LARRY & LAWRIE" to "Larry"
-          if (brawler.name === "LARRY & LAWRIE") {
-            return { ...brawler, name: "Larry" }; // Return a new object with the name updated
-          }
-          return brawler;
-        });
-
-
-      const sortedBrawlers = filteredBrawlers.sort((a: Brawler, b: Brawler) => a.name.localeCompare(b.name));
-      const sortedMaps = mapsData.sort((a: MapBs, b: MapBs) => {
-        const gameModeComparison = a.gameMode.localeCompare(b.gameMode);
-
-        if (gameModeComparison === 0) {
-          return a.name.localeCompare(b.name);
-        }
-  
-        return gameModeComparison;
-      });
-
-      setBrawlers(sortedBrawlers);
-      setMaps(sortedMaps);
-    };
-    loadData();
-  }, []);
+    // Load from cache on mount
+    useEffect(() => {
+      const cachedTag = localStorage.getItem(STORAGE_KEY);
+      if (cachedTag) setAccountTag(cachedTag);
+    }, []);
 
   // Toggle ban mode
   const toggleBanMode = () => {
@@ -132,7 +107,7 @@ const BrawlStarsDraft = () => {
 
   // Fetch win rate prediction when both teams are full
   useEffect(() => {
-    const fetchWinRate = async () => {
+    const updateWinrate = async () => {
       // Only fetch if both teams are full (3 brawlers each) and a map is selected
       if (teamA.length === 3 && teamB.length === 3 && selectedMap) {
         setIsLoadingWinRate(true);
@@ -141,7 +116,7 @@ const BrawlStarsDraft = () => {
           const friends = teamA.map(brawler => brawler.name);
           const enemies = teamB.map(brawler => brawler.name);
           
-          const response = await fetch(`${BASE_URL}/predict_winrate`, {
+          const response = await fetch(`${baseUrl}/predict_winrate`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -149,15 +124,15 @@ const BrawlStarsDraft = () => {
             body: JSON.stringify({
               initial_team: friends,
               initial_opponent: enemies,
-              map: selectedMap
+              map: selectedMap,
             }),
           });
-          
+      
           if (!response.ok) {
             throw new Error("Failed to fetch win rate prediction");
           }
-          
-          const data = await response.json();
+    
+          const data = await response.json(); // Return the parsed JSON response (win rate prediction data)
           setWinRate(data);
         } catch (error) {
           console.error("Error fetching win rate:", error);
@@ -171,7 +146,7 @@ const BrawlStarsDraft = () => {
       }
     };
     
-    fetchWinRate();
+    updateWinrate();
   }, [teamA, teamB, selectedMap]);
 
   // Submit draft data
@@ -186,18 +161,18 @@ const BrawlStarsDraft = () => {
     const formattedTeamB = teamB.map((brawler) => brawler.name);
     const formattedBannedBrawlers = bannedBrawlers.map((brawler) => brawler.name);
 
-
     const draftData = {
+      ...(availableBrawlers ? { available_brawlers: availableBrawlers } : {}),
       map: selectedMap,
       excluded_brawlers: formattedBannedBrawlers,
-      initial_team: formattedTeamA,  // Now only contains names
-      initial_opponent: formattedTeamB,  // Now only contains names
+      initial_team: formattedTeamA, 
+      initial_opponent: formattedTeamB,
     };
-
-    console.log("Send draft data", JSON.stringify(draftData));
+    
+    // console.log("Send draft data", JSON.stringify(draftData));
 
     try {
-      const response = await fetch(`${BASE_URL}/simulate_draft`, {
+      const response = await fetch(`${baseUrl}/simulate_draft`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -211,7 +186,7 @@ const BrawlStarsDraft = () => {
       }
 
       const result = await response.json();
-      console.log("Result : ", result);
+      // console.log("Result : ", result);
 
       interface FormattedItem {
         name: string;
@@ -252,7 +227,7 @@ const BrawlStarsDraft = () => {
   };
 
   // Get the current map's image URL
-  const currentMapImage = mapsData.find((map) => map.name === selectedMap)?.imageUrl || "";
+  const currentMapImage = maps.find((map) => map.name === selectedMap)?.imageUrl || "";
 
   // Function to check if a brawler is selected in any team or banned
   const getBrawlerStatus = (brawler: Brawler) => {
@@ -291,34 +266,107 @@ const BrawlStarsDraft = () => {
     return "Challenging matchup – Tough battle ahead. Stay resilient and work with your team!";
 };
 
+{/* Account inputs */}
 
+  // Clear input and remove from cache
+  const clearInput = () => {
+    setAccountTag("");
+    setAccountTagValid(null);
+    localStorage.removeItem(STORAGE_KEY);
+  };
+
+  // Handle input change and validate
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setAccountTag(newValue);
+    validateInput(newValue);
+    localStorage.setItem(STORAGE_KEY, newValue);
+  };
+
+    // Validate input and set validation state
+  const validateInput = (tag: string) => {
+    const tagPattern = /^#?[A-Za-z0-9]{9}$/; // Allows optional '#' followed by exactly 9 alphanumeric characters
+    setAccountTagValid(tagPattern.test(tag));
+  };
+
+  // Fetch available brawlers when accountTag is valid
+  useEffect(() => {
+    if (isAccountTagValid && accountTag) {
+      fetchAvailableBrawlers(accountTag, baseUrl);
+    } else {
+      setAvailableBrawlers([]);
+    }
+  }, [isAccountTagValid, accountTag]);
+
+  const fetchAvailableBrawlers = async (player_tag: string, baseUrl: string) => {
+  
+    try {
+      const response = await fetch(`${baseUrl}/account`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          player_tag: player_tag,
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to fetch user account");
+      }
+  
+      const data = await response.json(); // Return the parsed JSON response (win rate prediction data)
+      setAvailableBrawlers(data);
+    } catch (error) {
+      console.error("Error in fetchAvailableBrawlers:", error);
+      throw error; 
+    }
+  };
+  
   return (
-    <div className="container mx-auto p-4 max-w-full px-48">
+    <div className="container mx-auto p-4 max-w-full sm:px-8 md:px-32 px-48">
 
       {/* Map and Account Selection */}
       <div className="flex space-x-4 mb-8">
         {/* Map Selection */}
         <div className="flex-1">
           <SelectMap
-            mapsData={mapsData}
+            mapsData={maps}
             selectedMap={selectedMap}
             handleMapChange={handleMapChange}
           />
         </div>
         {/* Account Tag Selection */}
-        {/* <div className="flex-1">
-          <label htmlFor="accountTag" className="label">
-            <span className="label-text">Enter Your Account Tag</span>
-          </label>
+        <div className="relative w-96">
           <input
             type="text"
             id="accountTag"
             name="accountTag"
-            placeholder="e.g., User#1234"
-            className="input input-bordered w-full"
+            placeholder="Account Tag (#GZ95SFSKJ3)"
+            className="input input-bordered w-full pr-10"
+            value={accountTag}
+            onChange={handleInputChange}
             required
           />
-        </div> */}
+
+          {/* Validation Icon (Only Show When Valid) */}
+          {isAccountTagValid && availableBrawlers.length > 0 && (
+            <CheckCircle2
+              className="absolute right-8 top-1/2 transform -translate-y-1/2 text-green-500"
+              size={20}
+            />
+          )}
+
+          {/* Clear Button (Only Show When Input is Not Empty) */}
+          {accountTag && (
+            <button
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              onClick={clearInput}
+            >
+              <X size={20} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Main Content Layout */}
@@ -529,27 +577,31 @@ const BrawlStarsDraft = () => {
       </div>
 
       {/* Search bar */}
-      <div className="mb-8 relative">
-        <input
-          type="text"
-          placeholder="Search brawlers..."
-          className="input input-bordered w-full max-w-xs pr-10"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        {/* Clear Button */}
-        {searchTerm && (
-          <button
-            onClick={clearSearch}
-            className="absolute top-1/2 left-72 transform -translate-y-1/2 text-3xl"
-          >
-            &times;
-          </button>
-        )}
-      </div>
+        <div className="mb-8 relative">
+          <input
+            type="text"
+            placeholder="Search brawlers..."
+            className="input input-bordered w-full max-w-xs pr-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          {/* Clear Button */}
+          {searchTerm && (
+            <button
+              onClick={clearSearch}
+              className="absolute top-1/2 left-72 transform -translate-y-1/2 text-3xl"
+            >
+              &times;
+            </button>
+          )}
+        </div>
 
       {/* Brawlers Grid */}
-      <div className="grid grid-cols-[repeat(24,1fr)]">
+      {submissionResult && (
+
+
+
+        <div className="grid grid-cols-[repeat(24,1fr)]">
         {filteredBrawlers.map((brawler: Brawler) => {
           const status = getBrawlerStatus(brawler);
           let statusClass = "border-2 border-transparent";
@@ -580,6 +632,7 @@ const BrawlStarsDraft = () => {
           );
         })}
       </div>
+      )}
     </div>
   );
 };

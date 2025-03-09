@@ -5,14 +5,13 @@ import { fetchBrawlers, fetchMaps } from "../app/utils/api";
 import SelectMap from "@components/SelectMap";
 import Image from 'next/image';
 import CoffeeWaiting from "@components/CoffeeWaiting";
+import { useDataContext } from "@components/DataProviderContext";
 
 
 const TierListPage: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(true);
+  const { brawlers, maps, isLoading } = useDataContext();
   const [tierData, setTierData] = useState<any[]>([]); 
-  const [brawlers, setBrawlers] = useState<Brawler[]>([]);
   const [selectedMap, setSelectedMap] = useState<string>("");
-  const [mapsData, setMaps] = useState<MapBs[]>([]);
 
   const BASE_URL = process.env.NEXT_PUBLIC_ENDPOINT_BASE_URL || "https://metapick-ai.onrender.com";
 
@@ -94,31 +93,6 @@ const TierListPage: React.FC = () => {
     return tieredData;
   }, [tierData]);
 
-  useEffect(() => {
-    const loadData = async () => {
-      const brawlersData = await fetchBrawlers(BASE_URL);
-      const mapsData = await fetchMaps(BASE_URL);
-
-      // Filter out excluded brawlers and sort remaining ones
-      const excludedBrawlerName = 'Lumi';
-      const filteredBrawlers = brawlersData.filter((brawler: Brawler) => brawler.name !== excludedBrawlerName);
-      const sortedBrawlers = filteredBrawlers.sort((a: Brawler, b: Brawler) => a.name.localeCompare(b.name));
-      const sortedMaps = mapsData.sort((a: MapBs, b: MapBs) => {
-        const gameModeComparison = a.gameMode.localeCompare(b.gameMode);
-        if (gameModeComparison === 0) {
-          return a.name.localeCompare(b.name);
-        }
-        return gameModeComparison;
-      });
-
-      setBrawlers(sortedBrawlers);
-      setMaps(sortedMaps);
-      setIsLoading(false);
-    };
-
-    loadData();
-  }, []);
-
   // Traditional tier list color scheme
   const getTierColors = (tier: string) => {
     const colorMap: Record<string, { bg: string, text: string }> = {
@@ -150,7 +124,7 @@ const TierListPage: React.FC = () => {
             <h1 className="card-title text-xl font-bold text-primary">Brawl Stars Tier List</h1>
             
             <SelectMap
-              mapsData={mapsData}
+              mapsData={maps}
               selectedMap={selectedMap}
               handleMapChange={handleMapChange}
             />
@@ -198,7 +172,7 @@ const TierListPage: React.FC = () => {
           </div>
         ) : (
           !isLoading && (
-            <CoffeeWaiting />
+            <CoffeeWaiting name="tier list" description="The tier list will show brawlers ranked by their performance"></CoffeeWaiting>
           )
         )}
       </main>

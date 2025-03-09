@@ -23,6 +23,6 @@
       "@components/*": ["app/components/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/types/dropChance.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/utils/dropChance.ts", "src/app/utils/dropChance.js"],
   "exclude": ["node_modules"]
 }

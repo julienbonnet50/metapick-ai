@@ -12,9 +12,9 @@ const SelectMap: React.FC<{ mapsData: MapBs[], selectedMap: string, handleMapCha
   handleMapChange,
 }) => {
   return (
-    <div className="flex-1">
+    <div className="flex-1 sm:w-80 w-full max-w-md">
       <select
-        className="select select-bordered w-96 text-lg py-2 px-4 rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="select select-bordered w-full text-base sm:text-lg py-2 px-3 sm:px-4 rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
         onChange={handleMapChange}
         value={selectedMap}
       >
@@ -28,6 +28,7 @@ const SelectMap: React.FC<{ mapsData: MapBs[], selectedMap: string, handleMapCha
     </div>
   );
 };
+
 
 const MapOption: React.FC<{ map: MapBs }> = ({ map }) => {
   return (
