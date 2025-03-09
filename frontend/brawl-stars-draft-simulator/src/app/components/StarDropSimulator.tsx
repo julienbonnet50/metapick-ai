@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getDropChances, getItemImage } from '../utils/dropChance';
+import { generateUniqueId, getDropChances, getItemImage, getRarityColor } from '../utils/dropChance';
 
 const StarDrop = () => {
   const [dropResults, setDropResults] = useState<DropResult[]>([]);
@@ -9,7 +9,7 @@ const StarDrop = () => {
   const dropChances = getDropChances();
 
   // Rarity themes for visual styling based on Brawl Stars colors
-  const rarityThemes: { [key: string]: RarityTheme } = getItemImage();
+  const rarityThemes: { [key: string]: RarityTheme } = getRarityColor();
 
   // Simulate one drop and return a promise with the result
   const simulateSingleDrop = (): Promise<DropResult> => {
@@ -398,7 +398,3 @@ const StarDrop = () => {
 };
 
 export default StarDrop;
-function generateUniqueId(): string {
-  throw new Error('Function not implemented.');
-}
-

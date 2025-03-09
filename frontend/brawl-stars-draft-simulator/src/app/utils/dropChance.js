@@ -73,8 +73,8 @@ function getDropChances() {
     ];
   }
 
-  function getItemImage(item) {
-    const itemImages = {
+  function getRarityColor() {
+    const rarityColors = {
       Rare: {
         color: '#5eb6e6',
         borderColor: '#7dc9f9',
@@ -112,7 +112,7 @@ function getDropChances() {
         glowColor: 'rgba(255, 0, 0, 0.5)'
       }
     };
-    return itemImages[item] || itemImages.Error;
+    return rarityColors;
   }
 
 
@@ -167,5 +167,5 @@ function getDropChances() {
   };
   
   
-  export { getDropChances, getItemImage };
+  export { getDropChances, getItemImage, generateUniqueId, getRarityColor };
   
