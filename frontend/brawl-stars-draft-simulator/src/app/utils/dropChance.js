@@ -74,6 +74,49 @@ function getDropChances() {
   }
 
   function getItemImage(item) {
+    const itemImages = {
+      Rare: {
+        color: '#5eb6e6',
+        borderColor: '#7dc9f9',
+        bgColor: '#e6f4ff',
+        glowColor: 'rgba(94, 182, 230, 0.5)'
+      },
+      'Super Rare': {
+        color: '#65bb5c',
+        borderColor: '#7fd975',
+        bgColor: '#e6ffe6',
+        glowColor: 'rgba(101, 187, 92, 0.5)'
+      },
+      Epic: {
+        color: '#c13bf3',
+        borderColor: '#d968ff',
+        bgColor: '#f9e6ff',
+        glowColor: 'rgba(193, 59, 243, 0.5)'
+      },
+      Mythic: {
+        color: '#fe5e72',
+        borderColor: '#ff8c9a',
+        bgColor: '#ffe6ea',
+        glowColor: 'rgba(254, 94, 114, 0.5)'
+      },
+      Legendary: {
+        color: '#fff12c',
+        borderColor: '#ffff9a',
+        bgColor: '#ffffcc',
+        glowColor: 'rgba(255, 241, 44, 0.8)'
+      },
+      Error: {
+        color: '#ff0000',
+        borderColor: '#ff6666',
+        bgColor: '#ffcccc',
+        glowColor: 'rgba(255, 0, 0, 0.5)'
+      }
+    };
+    return itemImages[item] || itemImages.Error;
+  }
+
+
+  function getItemImage(item) {
     const itemMap = {
       "50 Coins": "coin.png",
       "25 Power Points": "power_points.png",
@@ -117,6 +160,11 @@ function getDropChances() {
   
     return itemMap[item] || "notfound.png";
   }
+
+  // Generate a unique ID for each drop
+  function generateUniqueId () {
+    return Date.now().toString(36) + Math.random().toString(36).substring(2);
+  };
   
   
   export { getDropChances, getItemImage };

@@ -4,19 +4,11 @@ import React, { createContext, useState, useEffect, ReactNode } from 'react';
 
 const BASE_URL = process.env.NEXT_PUBLIC_ENDPOINT_BASE_URL || "https://metapick-ai.onrender.com";
 
-interface DataProviderContextType {
-  brawlers: Brawler[];
-  maps: MapBs[];
-  baseUrl: string;
-  isLoading: boolean;
-  latestVersion: GameVersion | null;
-}
-
 const DataProviderContext = createContext<DataProviderContextType | undefined>(undefined);
 
 interface DataProviderContextProps {
-  children: ReactNode;
-}
+    children: ReactNode;
+  }
 
 export const DataProvider = ({ children }: DataProviderContextProps) => {
   const [brawlers, setBrawlers] = useState<Brawler[]>([]);

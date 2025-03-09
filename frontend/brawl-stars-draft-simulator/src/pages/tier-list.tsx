@@ -9,11 +9,9 @@ import { useDataContext } from "@components/DataProviderContext";
 
 
 const TierListPage: React.FC = () => {
-  const { brawlers, maps, isLoading } = useDataContext();
+  const { brawlers, maps, isLoading, baseUrl } = useDataContext();
   const [tierData, setTierData] = useState<any[]>([]); 
   const [selectedMap, setSelectedMap] = useState<string>("");
-
-  const BASE_URL = process.env.NEXT_PUBLIC_ENDPOINT_BASE_URL || "https://metapick-ai.onrender.com";
 
   const handleMapChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedMapValue = e.target.value;
@@ -21,7 +19,7 @@ const TierListPage: React.FC = () => {
 
     if (selectedMapValue) {
       try {
-        const response = await fetch(`${BASE_URL}/tier_list`, {
+        const response = await fetch(`${baseUrl}/tier_list`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

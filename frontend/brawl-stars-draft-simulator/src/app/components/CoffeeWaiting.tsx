@@ -1,11 +1,4 @@
-// src/components/TierListCard.tsx
-
 import React from "react";
-
-interface CoffeeWaitingProps {
-  name: string;
-  description: string;
-}
 
 const CoffeeWaiting: React.FC<CoffeeWaitingProps> = ({name, description}) => {
   return (

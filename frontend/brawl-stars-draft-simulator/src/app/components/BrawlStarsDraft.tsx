@@ -213,7 +213,7 @@ const BrawlStarsDraft = () => {
     if (selectedMap) {
       handleSubmit();
     }
-  }, [selectedMap, teamA, teamB, bannedBrawlers]); // Re-run handleSubmit when any of these change
+  }, [selectedMap, teamA, teamB, bannedBrawlers, availableBrawlers]); // Re-run handleSubmit when any of these change
 
   // Reset the draft
   const handleReset = () => {
