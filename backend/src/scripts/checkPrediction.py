@@ -28,8 +28,9 @@ mapName = 'Center Stage'
 excluded_brawlers = ['DYNAMIKE', 'MORTIS']
 friend_brawlers = ['SPIKE']
 enemy_brawlers = ['AMBER']
+available_brawlers = ["SHELLY","COLT","RICO","NITA","MORTIS","POCO","DARRYL","PENNY","FRANK","GENE","BYRON","STU","ASH","EVE","GUS","MAISIE","HANK","PEARL","LARRY & LAWRIE","MELODIE","KENJI","JUJU","OLLIE"]
 
-print(neuralNetworkService.predict_best_brawler(friends=friend_brawlers, enemies=enemy_brawlers, map_name=mapName, excluded=excluded_brawlers))
+print(neuralNetworkService.predict_best_brawler(friends=friend_brawlers, enemies=enemy_brawlers, map_name=mapName, excluded=excluded_brawlers, available_brawlers=available_brawlers))
 
 
 mapName = 'Center Stage'

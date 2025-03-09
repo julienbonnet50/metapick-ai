@@ -1,48 +1,22 @@
 "use client"
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { fetchGameVersions } from "../utils/api";
+import { useDataContext } from "./DataProviderContext";
 
 interface NavbarProps {
   toggleHowToUse: () => void;
   showHowToUse: boolean;
 }
 
-interface GameVersion {
-  version: string;
-  count: number
-  date: string;
-  name: string;
-  description: string;
-  ranked_maps: string[];
-}
-
-const BASE_URL = process.env.NEXT_PUBLIC_ENDPOINT_BASE_URL || "https://metapick-ai.onrender.com";
 
 const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
-  const [latestVersion, setLatestVersion] = useState<GameVersion | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  {/* Data */}
+  const { isLoading, latestVersion } = useDataContext();
+
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const pathname = usePathname();
-
-  useEffect(() => {
-    const loadGameVersion = async () => {
-      try {
-        setIsLoading(true);
-        const gameVersionData = await fetchGameVersions(BASE_URL);
-        setLatestVersion(gameVersionData);
-        
-      } catch (error: unknown) {
-        console.error('Error fetching game versions:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadGameVersion();
-  }, []);
   
   // Format date to be more readable
   const formatDate = (dateString: string) => {
@@ -60,21 +34,22 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
 
   // Navigation links
   const navLinks = [
-    { name: 'Draft tool', path: '/' },
+    { name: 'Draft tool', path: '/draft-tool' },
     { name: 'Stats', path: '/stats' },
     { name: 'Tier List', path: '/tier-list' },
+    { name: 'Upgrade Helper', path: '/upgrade-helper' },
     { name: 'Star drop simulator', path: '/star-drop-simulator'},
     { name: 'About', path: '/about' },
   ];
 
   return (
-    <nav className="bg-yellow-950 text-amber-50 p-4 shadow-md" style={{ fontFamily: 'Roboto, sans-serif' }}>
+      <nav className="bg-yellow-950 text-amber-50 p-4 shadow-md" style={{ fontFamily: 'Roboto, sans-serif' }}>
       <div className="container mx-auto flex flex-wrap justify-between items-center">
         {/* Left side - Logo and Title */}
         <div className="flex items-center">
           <Link href="/">
             <div className="flex items-center">
-              <Image
+              <img
                 width={40}
                 height={40}
                 src="/web-app-manifest-192x192.png"  
@@ -86,6 +61,21 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
           </Link>
         </div>
         
+        {/* Middle - Version Info */}
+        <div className="hidden md:flex items-center justify-center px-4">
+          {isLoading ? (
+            <div className="text-sm">Loading version info...</div>
+          ) : latestVersion ? (
+            <div className="text-sm bg-gradient-to-r from-rose-950 to-yellow-800 rounded-full px-4 py-2 shadow-md flex items-center justify-center space-x-2 border border-gray-700 text-gray-200">
+              <span><span className="text-violet-400 justify-center">Mythic+</span>{" ranked games analyzed: " + latestVersion.count.toLocaleString()}</span>
+              <span className="h-1 w-1 bg-gray-500 rounded-full justify-center"></span>
+              <span>{"Updated from " + formatDate(latestVersion.date)}</span>
+            </div>
+          ) : (
+            <div className="text-sm">Version info unavailable</div>
+          )}
+        </div>
+
         {/* Navigation Links - Desktop */}
         <div className="hidden md:flex space-x-6 mx-4">
           {navLinks.map((link) => (
@@ -99,23 +89,6 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
               {link.name}
             </Link>
           ))}
-        </div>
-        
-        {/* Middle - Version Info */}
-        <div className="hidden md:flex items-center justify-center px-4">
-          {isLoading ? (
-            <div className="text-sm">Loading version info...</div>
-          ) : latestVersion ? (
-            <div className="text-sm bg-gradient-to-r from-rose-950 to-yellow-800 rounded-full px-4 py-2 shadow-md flex items-center justify-center space-x-2 border border-gray-700 text-gray-200">
-              <span className="font-semibold text-white justify-center">Version {latestVersion.version}</span>
-              <span className="h-1 w-1 bg-gray-500 rounded-full justify-center"></span>
-              <span><span className="text-violet-400 justify-center">Mythic+</span>{" ranked games analyzed: " + latestVersion.count.toLocaleString()}</span>
-              <span className="h-1 w-1 bg-gray-500 rounded-full justify-center"></span>
-              <span>{"Updated from " + formatDate(latestVersion.date)}</span>
-            </div>
-          ) : (
-            <div className="text-sm">Version info unavailable</div>
-          )}
         </div>
         
         {/* Right side - How to Use button and Mobile Menu Toggle */}
@@ -172,7 +145,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
           </div>
         </div>
       )}
-    </nav>
+    </nav>   
   );
 };
 

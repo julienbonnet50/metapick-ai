@@ -1,20 +1,20 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Image from 'next/image';
-import { fetchBrawlers, fetchMaps } from "../utils/api";
 import SelectMap from "./SelectMap";
-
-const BASE_URL = process.env.NEXT_PUBLIC_ENDPOINT_BASE_URL || "https://metapick-ai.onrender.com";
-console.log("BASE_URL", BASE_URL);
-
+import { X, CheckCircle2, AlertOctagonIcon, HelpCircle} from "lucide-react";
+import { useDataContext } from "./DataProviderContext";
+import { getDraftToolTutorials } from "app/utils/tutorials";
 
 const safeToFixed = (value: number, decimals: number = 2) => {
   return typeof value === 'number' ? value.toFixed(decimals) : 'N/A';
 };
 
 const BrawlStarsDraft = () => {
-  const [brawlers, setBrawlers] = useState<Brawler[]>([]);
-  const [mapsData, setMaps] = useState<MapBs[]>([]);
+  {/* Data */}
+  const { brawlers, maps, baseUrl, torialShownKey } = useDataContext();
+
+  {/* Frontend user */}
   const [selectedMap, setSelectedMap] = useState<string>("");
   const [teamA, setTeamA] = useState<Brawler[]>([]);
   const [teamB, setTeamB] = useState<Brawler[]>([]);
@@ -25,41 +25,25 @@ const BrawlStarsDraft = () => {
   const [winRate, setWinRate] = useState<number | null>(null);
   const [isLoadingWinRate, setIsLoadingWinRate] = useState<boolean>(false);
 
-  // Fetch data on component mount
-  useEffect(() => {
-    const loadData = async () => {
-      const brawlersData = await fetchBrawlers(BASE_URL);
-      const mapsData = await fetchMaps(BASE_URL);
+  {/* User account */}
+  const [availableBrawlers, setAvailableBrawlers] = useState<Brawler[]>([]);
+  const [accountTag, setAccountTag] = useState("");
+  const [isAccountTagValid, setAccountTagValid] = useState<boolean | null>(null);
+  const STORAGE_KEY = "accountTag"; // Key for localStorage
 
-      // Sort the remaining brawlers and custom exclusion
-      const excludedBrawlerName = 'Lumi';
-      const filteredBrawlers = brawlersData
-        .filter((brawler: Brawler) => brawler.name !== excludedBrawlerName)
-        .map((brawler: Brawler) => {
-          // Rename "LARRY & LAWRIE" to "Larry"
-          if (brawler.name === "LARRY & LAWRIE") {
-            return { ...brawler, name: "Larry" }; // Return a new object with the name updated
-          }
-          return brawler;
-        });
+  {/* Tutorial related states */}
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
+  const [tutorialHighlight, setTutorialHighlight] = useState<string | null>(null);
+
+  const tutorialSteps = getDraftToolTutorials();
 
 
-      const sortedBrawlers = filteredBrawlers.sort((a: Brawler, b: Brawler) => a.name.localeCompare(b.name));
-      const sortedMaps = mapsData.sort((a: MapBs, b: MapBs) => {
-        const gameModeComparison = a.gameMode.localeCompare(b.gameMode);
-
-        if (gameModeComparison === 0) {
-          return a.name.localeCompare(b.name);
-        }
-  
-        return gameModeComparison;
-      });
-
-      setBrawlers(sortedBrawlers);
-      setMaps(sortedMaps);
-    };
-    loadData();
-  }, []);
+    // Load from cache on mount
+    useEffect(() => {
+      const cachedTag = localStorage.getItem(STORAGE_KEY);
+      if (cachedTag) setAccountTag(cachedTag);
+    }, []);
 
   // Toggle ban mode
   const toggleBanMode = () => {
@@ -132,7 +116,7 @@ const BrawlStarsDraft = () => {
 
   // Fetch win rate prediction when both teams are full
   useEffect(() => {
-    const fetchWinRate = async () => {
+    const updateWinrate = async () => {
       // Only fetch if both teams are full (3 brawlers each) and a map is selected
       if (teamA.length === 3 && teamB.length === 3 && selectedMap) {
         setIsLoadingWinRate(true);
@@ -141,7 +125,7 @@ const BrawlStarsDraft = () => {
           const friends = teamA.map(brawler => brawler.name);
           const enemies = teamB.map(brawler => brawler.name);
           
-          const response = await fetch(`${BASE_URL}/predict_winrate`, {
+          const response = await fetch(`${baseUrl}/predict_winrate`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -149,15 +133,15 @@ const BrawlStarsDraft = () => {
             body: JSON.stringify({
               initial_team: friends,
               initial_opponent: enemies,
-              map: selectedMap
+              map: selectedMap,
             }),
           });
-          
+      
           if (!response.ok) {
             throw new Error("Failed to fetch win rate prediction");
           }
-          
-          const data = await response.json();
+    
+          const data = await response.json(); // Return the parsed JSON response (win rate prediction data)
           setWinRate(data);
         } catch (error) {
           console.error("Error fetching win rate:", error);
@@ -171,7 +155,7 @@ const BrawlStarsDraft = () => {
       }
     };
     
-    fetchWinRate();
+    updateWinrate();
   }, [teamA, teamB, selectedMap]);
 
   // Submit draft data
@@ -186,18 +170,18 @@ const BrawlStarsDraft = () => {
     const formattedTeamB = teamB.map((brawler) => brawler.name);
     const formattedBannedBrawlers = bannedBrawlers.map((brawler) => brawler.name);
 
-
     const draftData = {
+      ...(availableBrawlers ? { available_brawlers: availableBrawlers } : {}),
       map: selectedMap,
       excluded_brawlers: formattedBannedBrawlers,
-      initial_team: formattedTeamA,  // Now only contains names
-      initial_opponent: formattedTeamB,  // Now only contains names
+      initial_team: formattedTeamA, 
+      initial_opponent: formattedTeamB,
     };
-
-    console.log("Send draft data", JSON.stringify(draftData));
+    
+    // console.log("Send draft data", JSON.stringify(draftData));
 
     try {
-      const response = await fetch(`${BASE_URL}/simulate_draft`, {
+      const response = await fetch(`${baseUrl}/simulate_draft`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -211,7 +195,7 @@ const BrawlStarsDraft = () => {
       }
 
       const result = await response.json();
-      console.log("Result : ", result);
+      // console.log("Result : ", result);
 
       interface FormattedItem {
         name: string;
@@ -238,7 +222,7 @@ const BrawlStarsDraft = () => {
     if (selectedMap) {
       handleSubmit();
     }
-  }, [selectedMap, teamA, teamB, bannedBrawlers]); // Re-run handleSubmit when any of these change
+  }, [selectedMap, teamA, teamB, bannedBrawlers, availableBrawlers]); // Re-run handleSubmit when any of these change
 
   // Reset the draft
   const handleReset = () => {
@@ -252,7 +236,7 @@ const BrawlStarsDraft = () => {
   };
 
   // Get the current map's image URL
-  const currentMapImage = mapsData.find((map) => map.name === selectedMap)?.imageUrl || "";
+  const currentMapImage = maps.find((map) => map.name === selectedMap)?.imageUrl || "";
 
   // Function to check if a brawler is selected in any team or banned
   const getBrawlerStatus = (brawler: Brawler) => {
@@ -291,34 +275,152 @@ const BrawlStarsDraft = () => {
     return "Challenging matchup – Tough battle ahead. Stay resilient and work with your team!";
 };
 
+{/* Account inputs */}
 
+  // Clear input and remove from cache
+  const clearInput = () => {
+    setAccountTag("");
+    setAccountTagValid(null);
+    localStorage.removeItem(STORAGE_KEY);
+  };
+
+  // Handle input change and validate
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setAccountTag(newValue);
+    validateInput(newValue);
+    localStorage.setItem(STORAGE_KEY, newValue);
+  };
+
+    // Validate input and set validation state
+  const validateInput = (tag: string) => {
+    const tagPattern = /^#?[A-Za-z0-9]{9}$/; // Allows optional '#' followed by exactly 9 alphanumeric characters
+    setAccountTagValid(tagPattern.test(tag));
+  };
+
+  // Fetch available brawlers when accountTag is valid
+  useEffect(() => {
+    if (isAccountTagValid && accountTag) {
+      fetchAvailableBrawlers(accountTag, baseUrl);
+    } else {
+      setAvailableBrawlers([]);
+    }
+  }, [isAccountTagValid, accountTag]);
+
+  const fetchAvailableBrawlers = async (player_tag: string, baseUrl: string) => {
+  
+    try {
+      const response = await fetch(`${baseUrl}/account`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          player_tag: player_tag,
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to fetch user account");
+      }
+  
+      const data = await response.json(); // Return the parsed JSON response (win rate prediction data)
+      setAvailableBrawlers(data);
+    } catch (error) {
+      console.error("Error in fetchAvailableBrawlers:", error);
+      throw error; 
+    }
+  };
+  
+  {/* Tutorial */}
+  
+  // Manual trigger for tutorial
+  const showTutorialManually = () => {
+    setShowTutorial(true);
+    setTutorialStep(0);
+    setTutorialHighlight('map-input');
+  };
+
+  // Close tutorial and mark as viewed
+  const closeTutorial = () => {
+    setShowTutorial(false);
+    setTutorialHighlight('');
+    localStorage.setItem(torialShownKey, 'true');
+  };
+
+  // Handle tutorial navigation
+  const nextTutorialStep = () => {
+    if (tutorialStep < tutorialSteps.length - 1) {
+      const nextStep = tutorialStep + 1;
+      setTutorialStep(nextStep);
+      setTutorialHighlight(tutorialSteps[nextStep].highlight);
+    } else {
+      closeTutorial();
+    }
+  };
+
+  const prevTutorialStep = () => {
+    if (tutorialStep > 0) {
+      const prevStep = tutorialStep - 1;
+      setTutorialStep(prevStep);
+      setTutorialHighlight(tutorialSteps[prevStep].highlight);
+    }
+  };
   return (
-    <div className="container mx-auto p-4 max-w-full px-48">
+    <div className="container mx-auto p-4 max-w-full sm:px-8 md:px-32 px-48">
 
       {/* Map and Account Selection */}
-      <div className="flex space-x-4 mb-8">
+      <div className="flex items-start space-x-4 mb-8">
         {/* Map Selection */}
-        <div className="flex-1">
+        <div className={`flex flex-col flex-1 ${tutorialHighlight === 'map-input' ? 'ring-2 ring-offset-2 ring-primary' : ''}`} id="map-input">
           <SelectMap
-            mapsData={mapsData}
+            mapsData={maps}
             selectedMap={selectedMap}
             handleMapChange={handleMapChange}
           />
         </div>
+
+        <div className="flex justify-between items-center mb-8">
+          <button 
+            onClick={showTutorialManually} 
+            className="btn btn-circle btn-ghost"
+            title="Show Tutorial"
+          >
+            <HelpCircle size={24} />
+          </button>
+        </div>
+
         {/* Account Tag Selection */}
-        {/* <div className="flex-1">
-          <label htmlFor="accountTag" className="label">
-            <span className="label-text">Enter Your Account Tag</span>
-          </label>
+        <div className={`flex flex-col w-96 relative ${tutorialHighlight === 'account-input' ? 'ring-2 ring-offset-2 ring-primary' : ''}`} id="account-input">
           <input
             type="text"
             id="accountTag"
             name="accountTag"
-            placeholder="e.g., User#1234"
-            className="input input-bordered w-full"
+            placeholder="Account Tag (#GZ95SFSKJ3)"
+            className="input input-bordered w-full pr-10"
+            value={accountTag}
+            onChange={handleInputChange}
             required
           />
-        </div> */}
+
+          {/* Validation Icon (Only Show When Valid) */}
+          {isAccountTagValid && availableBrawlers.length > 0 && (
+            <CheckCircle2
+              className="absolute right-8 top-1/2 transform -translate-y-1/2 text-green-500"
+              size={20}
+            />
+          )}
+
+          {/* Clear Button (Only Show When Input is Not Empty) */}
+          {accountTag && (
+            <button
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              onClick={clearInput}
+            >
+              <X size={20} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Main Content Layout */}
@@ -330,7 +432,7 @@ const BrawlStarsDraft = () => {
             <div className="flex flex-col gap-1">
               {bannedBrawlers.map((brawler, index) => (
                 <div key={index} className="flex items-center bg-base-300 p-2 rounded-lg">
-                  <Image 
+                  <img
                     src={brawler.imageUrl}
                     alt={brawler.name}
                     width={40}
@@ -356,7 +458,7 @@ const BrawlStarsDraft = () => {
             </button>
           </div>
           {/* Ban Mode Toggle */}
-          <div className="form-control w-52 mb-1 group relative">
+          <div className={`form-control w-52 mb-1 group relative ${tutorialHighlight === 'ban-mode' ? 'ring-2 ring-offset-2 ring-primary' : ''}`} id="ban-mode">
             <label className="cursor-pointer label">
               <span className="label-text text-xl">Ban Mode</span>
               <input
@@ -379,7 +481,7 @@ const BrawlStarsDraft = () => {
         </div>
 
         {/* Middle: Current Map and Teams */}
-        <div className="lg:w-3/6 relative">
+        <div className={`lg:w-3/6 relative ${tutorialHighlight === 'predict-winrate' ? 'ring-2 ring-offset-2 ring-primary' : ''}`} id="predict-winrate">
           {/* Current Map Image */}
           {selectedMap && (
             <div className="card bg-base-200 shadow-md p-4 text-center mb-8">
@@ -397,7 +499,7 @@ const BrawlStarsDraft = () => {
                   <div className="space-y-2">
                     {teamA.map((brawler, index) => (
                       <div key={index} className="flex items-center gap-2">
-                        <Image 
+                        <img
                           src={brawler.imageUrl}
                           alt={brawler.name}
                           width={40}
@@ -422,7 +524,7 @@ const BrawlStarsDraft = () => {
                   <div className="space-y-2">
                     {teamB.map((brawler, index) => (
                       <div key={index} className="flex items-center gap-2">
-                        <Image 
+                        <img
                           width={40}
                           height={40}
                           src={brawler.imageUrl}
@@ -444,14 +546,14 @@ const BrawlStarsDraft = () => {
 
                 {/* Win Rate Indicator - Shows when both teams are full and win rate is available */}
                 {teamA.length === 3 && teamB.length === 3 && (
-                  <div className="absolute bottom-0 left-0 right-0 p-2 bg-base-300 bg-opacity-90 group">
-                    <div className="text-center font-bold cursor-help">
+                  <div className={`absolute bottom-0 left-0 right-0 p-2 bg-base-300 bg-opacity-90 group`}>
+                    <div className={`text-center font-bold cursor-help`}>
                       {isLoadingWinRate ? (
                         <span className="loading loading-dots loading-md"></span>
                       ) : (
                         <>
                           <span>Match Prediction</span>
-                          <div className="opacity-100 absolute bottom-full left-0 right-0 p-3 bg-base-200 rounded-md shadow-lg z-10">
+                          <div className={`opacity-100 absolute bottom-full left-0 right-0 p-3 bg-base-200 rounded-md shadow-lg z-10`}>
                             {winRate !== null ? (
                               <div className="flex flex-col items-center gap-1">
                                 <span className={`text-xl font-bold ${getWinRateColorClass()}`}>
@@ -491,7 +593,7 @@ const BrawlStarsDraft = () => {
         {/* Right Side: Top 10 Brawlers */}
         <div className="lg:w1/6">
           {submissionResult && (
-            <div className="card bg-base-200 shadow-md p-4">
+            <div className={`card bg-base-200 shadow-md p-4 ${tutorialHighlight === 'top-10-brawlers' ? 'ring-2 ring-offset-2 ring-primary' : ''}`} id="top-10-brawlers">
               <h2 className="text-xl md:text-lg sm:text-sm font-bold mb-4 text-center">
                 Best 10 Brawlers for <span className="text-primary">{selectedMap}</span> by AI Score
               </h2>
@@ -502,7 +604,7 @@ const BrawlStarsDraft = () => {
                     className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 transform hover:-translate-y-2"
                   >
                     <figure className="px-3 pt-3">
-                      <Image 
+                      <img
                         width={64}
                         height={64}
                         src={brawler.imageUrl}
@@ -529,27 +631,28 @@ const BrawlStarsDraft = () => {
       </div>
 
       {/* Search bar */}
-      <div className="mb-8 relative">
-        <input
-          type="text"
-          placeholder="Search brawlers..."
-          className="input input-bordered w-full max-w-xs pr-10"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        {/* Clear Button */}
-        {searchTerm && (
-          <button
-            onClick={clearSearch}
-            className="absolute top-1/2 left-72 transform -translate-y-1/2 text-3xl"
-          >
-            &times;
-          </button>
-        )}
-      </div>
+        <div className="mb-8 relative">
+          <input
+            type="text"
+            placeholder="Search brawlers..."
+            className="input input-bordered w-full max-w-xs pr-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          {/* Clear Button */}
+          {searchTerm && (
+            <button
+              onClick={clearSearch}
+              className="absolute top-1/2 left-72 transform -translate-y-1/2 text-3xl"
+            >
+              &times;
+            </button>
+          )}
+        </div>
 
       {/* Brawlers Grid */}
-      <div className="grid grid-cols-[repeat(24,1fr)]">
+      {submissionResult && (
+        <div className={`grid grid-cols-[repeat(24,1fr)] ${tutorialHighlight === 'brawler-grid' ? 'ring-2 ring-offset-2 ring-primary' : ''}`} id="brawler-grid">
         {filteredBrawlers.map((brawler: Brawler) => {
           const status = getBrawlerStatus(brawler);
           let statusClass = "border-2 border-transparent";
@@ -568,7 +671,7 @@ const BrawlStarsDraft = () => {
                 handleBrawlerClick(brawler, "B");
               }}
             >
-              <Image
+              <img
                 width={55}
                 height={55} 
                 src={brawler.imageUrl}
@@ -580,6 +683,44 @@ const BrawlStarsDraft = () => {
           );
         })}
       </div>
+      )}
+
+      {/* Tutorial Modal */}
+      {showTutorial && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="card bg-base-100 w-full max-w-md mx-4">
+            <div className="card-body">
+              <div className="flex justify-between items-center">
+                <h2 className="card-title text-xl">{tutorialSteps[tutorialStep].title}</h2>
+                <button onClick={closeTutorial} className="btn btn-sm btn-circle btn-ghost">
+                  <X size={20} />
+                </button>
+              </div>
+              <p className="py-4">{tutorialSteps[tutorialStep].content}</p>
+              <div className="card-actions justify-between mt-4">
+                <button 
+                  onClick={prevTutorialStep}
+                  className="btn btn-outline"
+                  disabled={tutorialStep === 0}
+                >
+                  Previous
+                </button>
+                <div>
+                  <span className="mr-4 text-sm">
+                    {tutorialStep + 1} of {tutorialSteps.length}
+                  </span>
+                  <button 
+                    onClick={nextTutorialStep}
+                    className="btn btn-primary"
+                  >
+                    {tutorialStep === tutorialSteps.length - 1 ? 'Finish' : 'Next'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,276 +1,442 @@
+"use client"
+import { useDataContext } from '@components/DataProviderContext';
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
+import { CheckCircle2, X, HelpCircle } from 'lucide-react'; // Added HelpCircle icon
+import { getUpgradeHelperTutorials } from '../app/utils/tutorials';
 
-interface Brawler {
-  id: number;
-  name: string;
-  rarity: string;
-  image: string;
-  powerPoints: number;
-  currentLevel: number;
-  maxLevel: number;
-  coins: number;
-  gears: number;
-}
+const UpgradeHelper = () => {
+  const { baseUrl, storageKey, torialShownKey, tutorialLastShownKey, brawlers } = useDataContext();
+  const [data, setData] = useState<PlayerAccountHelper[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [accountTag, setAccountTag] = useState<string>('');
+  const [isAccountTagValid, setAccountTagValid] = useState<boolean | null>(null);
+  const [sortField, setSortField] = useState('score');
+  const [sortDirection, setSortDirection] = useState('desc');
+  const [availableBrawlers, setAvailableBrawlers] = useState<PlayerAccountHelper[]>([]);
+  
+  // Tutorial related states
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
+  const [tutorialHighlight, setTutorialHighlight] = useState<string | null>(null);
 
-interface UpgradeResource {
-  powerPoints: number;
-  coins: number;
-  gears: number;
-}
+  // Clear input and remove from cache
+  const clearInput = () => {
+    setAccountTag("");
+    setAccountTagValid(null);
+    localStorage.removeItem(storageKey);
+    setData([]);
+  };
 
-const UpgradeHelper: React.FC = () => {
-  const [brawlers, setBrawlers] = useState<Brawler[]>([]);
-  const [selectedBrawlers, setSelectedBrawlers] = useState<number[]>([]);
-  const [resources, setResources] = useState<UpgradeResource>({
-    powerPoints: 0,
-    coins: 0,
-    gears: 0
-  });
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [filterRarity, setFilterRarity] = useState<string>('all');
+  // Handle input change and validate
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setAccountTag(newValue);
+    validateInput(newValue);
+    localStorage.setItem(storageKey, newValue);
+  };
 
-  // Sample brawler data - in production, you'd fetch this from an API
-  useEffect(() => {
-    // Simulate API fetch
-    setTimeout(() => {
-      setBrawlers([
-        { id: 1, name: "Shelly", rarity: "Starting", image: "/brawlers/shelly.png", powerPoints: 0, currentLevel: 9, maxLevel: 11, coins: 1250, gears: 2 },
-        { id: 2, name: "Colt", rarity: "Rare", image: "/brawlers/colt.png", powerPoints: 220, currentLevel: 7, maxLevel: 11, coins: 1550, gears: 3 },
-        { id: 3, name: "Brock", rarity: "Trophy Road", image: "/brawlers/brock.png", powerPoints: 340, currentLevel: 8, maxLevel: 11, coins: 1250, gears: 2 },
-        { id: 4, name: "Jessie", rarity: "Trophy Road", image: "/brawlers/jessie.png", powerPoints: 0, currentLevel: 11, maxLevel: 11, coins: 0, gears: 0 },
-        { id: 5, name: "Nita", rarity: "Trophy Road", image: "/brawlers/nita.png", powerPoints: 880, currentLevel: 9, maxLevel: 11, coins: 2000, gears: 2 },
-        { id: 6, name: "Dynamike", rarity: "Trophy Road", image: "/brawlers/dynamike.png", powerPoints: 520, currentLevel: 7, maxLevel: 11, coins: 1750, gears: 3 },
-        { id: 7, name: "Bo", rarity: "Trophy Road", image: "/brawlers/bo.png", powerPoints: 130, currentLevel: 6, maxLevel: 11, coins: 1000, gears: 3 },
-        { id: 8, name: "Spike", rarity: "Legendary", image: "/brawlers/spike.png", powerPoints: 520, currentLevel: 7, maxLevel: 11, coins: 1750, gears: 3 },
-        { id: 9, name: "Crow", rarity: "Legendary", image: "/brawlers/crow.png", powerPoints: 0, currentLevel: 11, maxLevel: 11, coins: 0, gears: 0 },
-        { id: 10, name: "Leon", rarity: "Legendary", image: "/brawlers/leon.png", powerPoints: 150, currentLevel: 5, maxLevel: 11, coins: 800, gears: 3 },
-      ]);
-      setIsLoading(false);
-    }, 800);
-  }, []);
+  // Validate input and set validation state
+  const validateInput = (tag: string) => {
+    const tagPattern = /^#?[A-Za-z0-9]{9}$/; // Allows optional '#' followed by exactly 9 alphanumeric characters
+    setAccountTagValid(tagPattern.test(tag));
+  };
 
-  // Calculate resources needed when selection changes
-  useEffect(() => {
-    if (selectedBrawlers.length === 0) {
-      setResources({ powerPoints: 0, coins: 0, gears: 0 });
+  // Process form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!isAccountTagValid) {
+      setError("Please enter a valid player tag");
       return;
     }
-
-    const totals = selectedBrawlers.reduce((acc, brawlerId) => {
-      const brawler = brawlers.find(b => b.id === brawlerId);
-      if (brawler) {
-        return {
-          powerPoints: acc.powerPoints + brawler.powerPoints,
-          coins: acc.coins + brawler.coins,
-          gears: acc.gears + brawler.gears
-        };
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Format the tag (ensure it has # at the beginning)
+      const formattedTag = accountTag.startsWith('#') ? accountTag : `#${accountTag}`;
+      
+      const response = await fetch(`${baseUrl}/account-upgrade-helper`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ player_tag: formattedTag }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
       }
-      return acc;
-    }, { powerPoints: 0, coins: 0, gears: 0 });
-
-    setResources(totals);
-  }, [selectedBrawlers, brawlers]);
-
-  const toggleBrawlerSelection = (brawlerId: number) => {
-    if (selectedBrawlers.includes(brawlerId)) {
-      setSelectedBrawlers(selectedBrawlers.filter(id => id !== brawlerId));
-    } else {
-      setSelectedBrawlers([...selectedBrawlers, brawlerId]);
+      
+      const responseData = await response.json();
+      setData(responseData);
+      setAvailableBrawlers(responseData);
+      
+      // If user has completed search and we're on the relevant tutorial step, move to next step
+      if (showTutorial && tutorialStep === 0) {
+        setTutorialStep(1);
+        setTutorialHighlight('recommended-upgrades');
+      }
+    } catch (error: unknown) {
+      console.error("Error fetching data:", error);
+      setError(error instanceof Error ? error.message : "An unknown error occurred");
+      setData([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const selectAllBrawlers = () => {
-    const allIds = brawlers.map(brawler => brawler.id);
-    setSelectedBrawlers(allIds);
+  // Initial validation and tutorial setup on component mount
+  useEffect(() => {
+    if (accountTag) {
+      validateInput(accountTag);
+    }
+    
+    // Check if we should show the tutorial
+    if (typeof window !== 'undefined') {
+      const tutorialShown = localStorage.getItem(torialShownKey);
+      const lastShownDate = localStorage.getItem(tutorialLastShownKey);
+      setAccountTag(localStorage.getItem(storageKey) || '');
+      const today = new Date().toDateString();
+      
+      // Show tutorial if it has never been shown or if it's a new day
+      if (!tutorialShown || (lastShownDate && lastShownDate !== today)) {
+        setShowTutorial(true);
+        setTutorialStep(0);
+        setTutorialHighlight('account-input');
+        // Update the last shown date to today
+        localStorage.setItem(tutorialLastShownKey, today);
+      }
+    }
+  }, []);
+
+  // Close tutorial and mark as viewed
+  const closeTutorial = () => {
+    setShowTutorial(false);
+    localStorage.setItem(torialShownKey, 'true');
   };
 
-  const clearSelection = () => {
-    setSelectedBrawlers([]);
+  // Handle tutorial navigation
+  const nextTutorialStep = () => {
+    if (tutorialStep < tutorialSteps.length - 1) {
+      const nextStep = tutorialStep + 1;
+      setTutorialStep(nextStep);
+      setTutorialHighlight(tutorialSteps[nextStep].highlight);
+    } else {
+      closeTutorial();
+    }
   };
 
-  const rarityColors: { [key: string]: string } = {
-    "Starting": "from-gray-600 to-gray-800",
-    "Trophy Road": "from-blue-600 to-blue-800",
-    "Rare": "from-green-600 to-green-800",
-    "Super Rare": "from-cyan-600 to-cyan-800",
-    "Epic": "from-purple-600 to-purple-800",
-    "Mythic": "from-red-600 to-red-800",
-    "Legendary": "from-yellow-500 to-amber-700",
-    "Chromatic": "from-orange-500 to-orange-700"
+  const prevTutorialStep = () => {
+    if (tutorialStep > 0) {
+      const prevStep = tutorialStep - 1;
+      setTutorialStep(prevStep);
+      setTutorialHighlight(tutorialSteps[prevStep].highlight);
+    }
   };
 
-  // Filter and search brawlers
-  const filteredBrawlers = brawlers.filter(brawler => {
-    const matchesSearch = brawler.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRarity = filterRarity === 'all' || brawler.rarity === filterRarity;
-    return matchesSearch && matchesRarity;
+  // Tutorial content for each step
+  const tutorialSteps = getUpgradeHelperTutorials();
+
+  const handleSort = (field: keyof PlayerAccountHelper) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field.toString());
+      setSortDirection('desc');
+    }
+    
+    // If user sorts and we're on the relevant tutorial step, move to next step
+    if (showTutorial && tutorialStep === 2) {
+      nextTutorialStep();
+    }
+  };
+
+  const sortedData = [...data].sort((a, b) => {
+    if (a[sortField] === null) return 1;
+    if (b[sortField] === null) return -1;
+    
+    // Type assertion to tell TypeScript these are numbers
+    const aValue = a[sortField] as number;
+    const bValue = b[sortField] as number;
+    
+    return sortDirection === 'asc' 
+      ? aValue - bValue
+      : bValue - aValue;
   });
 
-  return (
-    <div className="container mx-auto py-6 px-4">
-      <h1 className="text-3xl font-bold text-amber-50 mb-6">Brawler Upgrade Helper</h1>
-      
-      <div className="bg-yellow-900 rounded-lg p-6 mb-6 shadow-lg">
-        <h2 className="text-xl font-bold text-amber-50 mb-4">Resources Needed</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-gradient-to-r from-blue-800 to-blue-950 rounded-lg p-4 flex items-center">
-            <div className="w-12 h-12 bg-blue-700 rounded-full flex items-center justify-center mr-3">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm text-blue-300">Power Points</p>
-              <p className="text-xl font-bold text-white">{resources.powerPoints.toLocaleString()}</p>
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-r from-yellow-700 to-yellow-900 rounded-lg p-4 flex items-center">
-            <div className="w-12 h-12 bg-yellow-600 rounded-full flex items-center justify-center mr-3">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm text-yellow-300">Coins</p>
-              <p className="text-xl font-bold text-white">{resources.coins.toLocaleString()}</p>
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-r from-purple-800 to-purple-950 rounded-lg p-4 flex items-center">
-            <div className="w-12 h-12 bg-purple-700 rounded-full flex items-center justify-center mr-3">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm text-purple-300">Gears</p>
-              <p className="text-xl font-bold text-white">{resources.gears}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div className="bg-yellow-900 rounded-lg p-6 shadow-lg">
-        <div className="flex flex-col sm:flex-row justify-between mb-6">
-          <div className="flex flex-col sm:flex-row gap-3 mb-3 sm:mb-0">
-            <input
-              type="text"
-              placeholder="Search brawlers..."
-              className="px-4 py-2 rounded bg-yellow-800 text-amber-50 border border-yellow-700 focus:outline-none focus:ring-2 focus:ring-amber-600"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            
-            <select
-              className="px-4 py-2 rounded bg-yellow-800 text-amber-50 border border-yellow-700 focus:outline-none focus:ring-2 focus:ring-amber-600"
-              value={filterRarity}
-              onChange={(e) => setFilterRarity(e.target.value)}
-            >
-              <option value="all">All Rarities</option>
-              <option value="Starting">Starting</option>
-              <option value="Trophy Road">Trophy Road</option>
-              <option value="Rare">Rare</option>
-              <option value="Super Rare">Super Rare</option>
-              <option value="Epic">Epic</option>
-              <option value="Mythic">Mythic</option>
-              <option value="Legendary">Legendary</option>
-              <option value="Chromatic">Chromatic</option>
-            </select>
-          </div>
-          
-          <div className="flex gap-3">
-            <button 
-              onClick={selectAllBrawlers}
-              className="px-4 py-2 bg-amber-700 rounded hover:bg-amber-600 transition-colors text-amber-50"
-            >
-              Select All
-            </button>
-            <button 
-              onClick={clearSelection}
-              className="px-4 py-2 bg-rose-800 rounded hover:bg-rose-700 transition-colors text-amber-50"
-            >
-              Clear
-            </button>
-          </div>
-        </div>
+  // Get top 5 brawlers
+  const topBrawlers = sortedData
+    .filter(brawler => brawler.score !== null)
+    .slice(0, 5);
 
-        {isLoading ? (
-          <div className="flex justify-center items-center py-10">
-            <div className="w-12 h-12 border-t-4 border-amber-500 border-solid rounded-full animate-spin"></div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {filteredBrawlers.map(brawler => (
+  const getScoreColor = (score: number | null) => {
+    if (score === null) return 'bg-gray-500';
+    if (score > 60) return 'bg-emerald-500';
+    if (score > 40) return 'bg-green-500';
+    if (score > 20) return 'bg-amber-500';
+    return 'bg-red-500';
+  };
+
+  // Manual trigger for tutorial
+  const showTutorialManually = () => {
+    setShowTutorial(true);
+    setTutorialStep(0);
+    setTutorialHighlight('account-input');
+  };
+
+  return (
+    <div className="min-h-screen bg-base-200 p-4 flex flex-col items-center">
+      <div className="w-full max-w-4xl">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold text-center text-primary">Brawl Stars Upgrade Helper</h1>
+          <button 
+            onClick={showTutorialManually} 
+            className="btn btn-circle btn-ghost"
+            title="Show Tutorial"
+          >
+            <HelpCircle size={24} />
+          </button>
+        </div>
+        
+        <div className="card bg-base-100 shadow-xl mb-8">
+          <div className="card-body">
+            <h2 className="card-title text-2xl mb-4">Find your best upgrade options</h2>
+            
+            <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4 mb-4">
+              {/* Account Tag Selection */}
               <div 
-                key={brawler.id}
-                className={`relative bg-gradient-to-br ${rarityColors[brawler.rarity]} rounded-lg shadow-md overflow-hidden cursor-pointer transition-all duration-200 ${
-                  selectedBrawlers.includes(brawler.id) 
-                    ? 'ring-4 ring-amber-500 scale-105' 
-                    : 'hover:scale-102'
-                }`}
-                onClick={() => toggleBrawlerSelection(brawler.id)}
+                className={`relative w-full md:w-96 ${tutorialHighlight === 'account-input' ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
+                id="account-input"
               >
-                <div className="p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-bold text-white truncate">{brawler.name}</h3>
-                    <span className="text-xs font-medium px-2 py-1 bg-black bg-opacity-30 rounded-full text-white">
-                      {brawler.rarity}
-                    </span>
-                  </div>
-                  
-                  <div className="flex justify-center mb-3">
-                    <div className="h-24 w-24 relative flex items-center justify-center">
-                      {/* Replace with actual image path or use placeholder */}
-                      <div className="h-20 w-20 rounded-full bg-yellow-800 flex items-center justify-center text-lg font-bold text-white">
-                        {brawler.name.substring(0, 2)}
+                <input
+                  type="text"
+                  id="accountTag"
+                  name="accountTag"
+                  placeholder="Account Tag (#GZ95SFSKJ3)"
+                  className="input input-bordered w-full pr-10"
+                  value={accountTag}
+                  onChange={handleInputChange}
+                  required
+                />
+                
+                {/* Validation Icon (Only Show When Valid) */}
+                {isAccountTagValid && availableBrawlers.length > 0 && (
+                  <CheckCircle2
+                    className="absolute right-8 top-1/2 transform -translate-y-1/2 text-green-500"
+                    size={20}
+                  />
+                )}
+                
+                {/* Clear Button (Only Show When Input is Not Empty) */}
+                {accountTag && (
+                  <button
+                    type="button" // Important to prevent form submission
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    onClick={clearInput}
+                  >
+                    <X size={20} />
+                  </button>
+                )}
+              </div>
+              
+              <button 
+                type="submit" 
+                className="btn btn-primary"
+                disabled={loading || !isAccountTagValid}
+              >
+                {loading ? <span className="loading loading-spinner"></span> : 'Analyze'}
+              </button>
+            </form>
+            
+            {error && (
+              <div className="alert alert-error mb-4">
+                <span>{error}</span>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {data.length > 0 && (
+          <>
+            <div 
+              className={`card bg-base-100 shadow-xl mb-8 ${tutorialHighlight === 'recommended-upgrades' ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
+              id="recommended-upgrades"
+            >
+              <div className="card-body">
+                <h2 className="card-title text-2xl mb-4">Recommended Upgrades</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {topBrawlers.map((brawler, index) => {
+                  const brawlerData = brawlers.find((b) => 
+                    b.name.toUpperCase() === brawler.name.toUpperCase() ||
+                    (brawler.name === "LARRY & LAWRIE" && b.name.toUpperCase() === "LARRY")
+                  );
+
+                  return (
+                    <div key={brawler.name} className="card bg-base-200 shadow-md">
+                      <div className="card-body p-4 flex items-center">
+                        {/* Brawler Image */}
+                        <img
+                          width={80}
+                          height={80}
+                          src={brawlerData?.imageUrl || "/default-image.png"}
+                          alt={brawler.name}
+                          className="mr-4 rounded-full"
+                        />
+                        <div className="w-full">
+                          <h3 className="card-title text-lg">{brawler.name}</h3>
+                          <div className="flex items-center mt-2">
+                            <div className="w-full bg-gray-700 rounded-full h-4">
+                              <div 
+                                className={`${getScoreColor(brawler.score)} h-4 rounded-full`} 
+                                style={{width: `${Math.min(100, brawler.score || 0)}%`}}
+                              ></div>
+                            </div>
+                            <span className="ml-2 font-bold">
+                              {brawler.score !== null ? brawler.score.toFixed(1) : 'N/A'}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="space-y-2 text-sm text-white">
-                    <div className="flex justify-between">
-                      <span>Level:</span>
-                      <span>{brawler.currentLevel}/{brawler.maxLevel}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Power Points:</span>
-                      <span>{brawler.powerPoints}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Coins:</span>
-                      <span>{brawler.coins}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Gears:</span>
-                      <span>{brawler.gears}</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="absolute top-2 right-2">
-                  {selectedBrawlers.includes(brawler.id) && (
-                    <div className="rounded-full bg-amber-500 h-6 w-6 flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                  )}
+                  );
+                })}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-        
-        {filteredBrawlers.length === 0 && !isLoading && (
-          <div className="text-center py-10 text-amber-50">
-            <p className="text-xl">No brawlers found.</p>
-            <p className="text-sm mt-2">Try changing your search or filter.</p>
-          </div>
+            </div>
+            
+            <div 
+              className={`card bg-base-100 shadow-xl ${tutorialHighlight === 'all-brawlers' ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
+              id="all-brawlers"
+            >
+              <div className="card-body">
+                <h2 className="card-title text-2xl mb-4">All Brawlers</h2>
+                <div className="overflow-x-auto">
+                  <table className="table table-zebra w-full">
+                    <thead>
+                      <tr>
+                        <th 
+                          className="cursor-pointer"
+                          onClick={() => handleSort('name')}
+                        >
+                          Name
+                          {sortField === 'name' && (
+                            <span>{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                          )}
+                        </th>
+                        <th 
+                          className="cursor-pointer"
+                          onClick={() => handleSort('score')}
+                        >
+                          Score
+                          {sortField === 'score' && (
+                            <span>{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                          )}
+                        </th>
+                        <th 
+                          className="cursor-pointer"
+                          onClick={() => handleSort('total_power_points')}
+                        >
+                          Power Points
+                          {sortField === 'total_power_points' && (
+                            <span>{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                          )}
+                        </th>
+                        <th 
+                          className="cursor-pointer"
+                          onClick={() => handleSort('total_coins')}
+                        >
+                          Coins
+                          {sortField === 'total_coins' && (
+                            <span>{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                          )}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    {sortedData.map((brawler) => {
+                      const brawlerData = brawlers.find((b) => 
+                        b.name.toUpperCase() === brawler.name.toUpperCase() ||
+                        (brawler.name === "LARRY & LAWRIE" && b.name.toUpperCase() === "LARRY")
+                      );
+
+                      return (
+                        <tr key={brawler.name}>
+                          <td className="flex items-center">
+                            {/* Add Brawler Image before Name */}
+                            <img
+                              width={20}
+                              height={20}
+                              src={brawlerData?.imageUrl || "/default-image.png"}
+                              alt={brawler.name}
+                              className="mr-2"
+                            />
+                            {brawler.name}
+                          </td>
+                          <td>
+                            <div className="flex items-center">
+                              <div className="w-24 bg-gray-700 rounded-full h-2 mr-2">
+                                <div 
+                                  className={`${getScoreColor(brawler.score)} h-2 rounded-full`} 
+                                  style={{ width: `${Math.min(100, brawler.score || 0)}%` }}
+                                ></div>
+                              </div>
+                              {brawler.score !== null ? brawler.score.toFixed(1) : 'N/A'}
+                            </div>
+                          </td>
+                          <td>{brawler.total_power_points}</td>
+                          <td>{brawler.total_coins}</td>
+                        </tr>
+                      );
+                    })}
+
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </>
         )}
       </div>
+      
+      {/* Tutorial Modal */}
+      {showTutorial && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="card bg-base-100 w-full max-w-md mx-4">
+            <div className="card-body">
+              <div className="flex justify-between items-center">
+                <h2 className="card-title text-xl">{tutorialSteps[tutorialStep].title}</h2>
+                <button onClick={closeTutorial} className="btn btn-sm btn-circle btn-ghost">
+                  <X size={20} />
+                </button>
+              </div>
+              <p className="py-4">{tutorialSteps[tutorialStep].content}</p>
+              <div className="card-actions justify-between mt-4">
+                <button 
+                  onClick={prevTutorialStep}
+                  className="btn btn-outline"
+                  disabled={tutorialStep === 0}
+                >
+                  Previous
+                </button>
+                <div>
+                  <span className="mr-4 text-sm">
+                    {tutorialStep + 1} of {tutorialSteps.length}
+                  </span>
+                  <button 
+                    onClick={nextTutorialStep}
+                    className="btn btn-primary"
+                  >
+                    {tutorialStep === tutorialSteps.length - 1 ? 'Finish' : 'Next'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

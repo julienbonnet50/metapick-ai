@@ -14,7 +14,7 @@ from backend.src.config import AppConfig
 # Main variables
 appConfig = AppConfig.AppConfig()
 postgreService = PostgreService.PostgreService(appConfig=appConfig)
-max_threads = 40
+max_threads = 60
 processed_players = 0
 
 # Data

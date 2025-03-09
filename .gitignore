@@ -5,3 +5,6 @@ __pycache__
 data/model
 data_all.pkl
 data/*
+
+
+test.json

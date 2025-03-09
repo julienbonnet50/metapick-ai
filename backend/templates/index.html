@@ -164,7 +164,7 @@
                 obj[key] = decodeURIComponent(value);
             });
 
-            console.log("Sumbit form : ", obj);
+            // console.log("Sumbit form : ", obj);
             var map = obj['map'];
 
             var extractedValues = extractValuesBetweenQuotes(map);
@@ -218,7 +218,7 @@
             var mapPath = extractedValues[1];
 
             var mapData = maps.find(m => m[0] === mapName);
-            console.log("Map find : ", mapData);
+            // console.log("Map find : ", mapData);
 
             $.ajax({
                 url: '/get_top15_brawlers',
