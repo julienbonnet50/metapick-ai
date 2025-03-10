@@ -2,8 +2,9 @@
 import React, { useEffect, useState } from "react";
 import Image from 'next/image';
 import SelectMap from "./SelectMap";
-import { X, CheckCircle2, AlertOctagonIcon} from "lucide-react";
+import { X, CheckCircle2, AlertOctagonIcon, HelpCircle} from "lucide-react";
 import { useDataContext } from "./DataProviderContext";
+import { getDraftToolTutorials } from "app/utils/tutorials";
 
 const safeToFixed = (value: number, decimals: number = 2) => {
   return typeof value === 'number' ? value.toFixed(decimals) : 'N/A';
@@ -11,7 +12,7 @@ const safeToFixed = (value: number, decimals: number = 2) => {
 
 const BrawlStarsDraft = () => {
   {/* Data */}
-  const { brawlers, maps, baseUrl } = useDataContext();
+  const { brawlers, maps, baseUrl, torialShownKey } = useDataContext();
 
   {/* Frontend user */}
   const [selectedMap, setSelectedMap] = useState<string>("");
@@ -29,6 +30,14 @@ const BrawlStarsDraft = () => {
   const [accountTag, setAccountTag] = useState("");
   const [isAccountTagValid, setAccountTagValid] = useState<boolean | null>(null);
   const STORAGE_KEY = "accountTag"; // Key for localStorage
+
+  {/* Tutorial related states */}
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
+  const [tutorialHighlight, setTutorialHighlight] = useState<string | null>(null);
+
+  const tutorialSteps = getDraftToolTutorials();
+
 
     // Load from cache on mount
     useEffect(() => {
@@ -323,21 +332,66 @@ const BrawlStarsDraft = () => {
     }
   };
   
+  {/* Tutorial */}
+  
+  // Manual trigger for tutorial
+  const showTutorialManually = () => {
+    setShowTutorial(true);
+    setTutorialStep(0);
+    setTutorialHighlight('map-input');
+  };
+
+  // Close tutorial and mark as viewed
+  const closeTutorial = () => {
+    setShowTutorial(false);
+    setTutorialHighlight('');
+    localStorage.setItem(torialShownKey, 'true');
+  };
+
+  // Handle tutorial navigation
+  const nextTutorialStep = () => {
+    if (tutorialStep < tutorialSteps.length - 1) {
+      const nextStep = tutorialStep + 1;
+      setTutorialStep(nextStep);
+      setTutorialHighlight(tutorialSteps[nextStep].highlight);
+    } else {
+      closeTutorial();
+    }
+  };
+
+  const prevTutorialStep = () => {
+    if (tutorialStep > 0) {
+      const prevStep = tutorialStep - 1;
+      setTutorialStep(prevStep);
+      setTutorialHighlight(tutorialSteps[prevStep].highlight);
+    }
+  };
   return (
     <div className="container mx-auto p-4 max-w-full sm:px-8 md:px-32 px-48">
 
       {/* Map and Account Selection */}
-      <div className="flex space-x-4 mb-8">
+      <div className="flex items-start space-x-4 mb-8">
         {/* Map Selection */}
-        <div className="flex-1">
+        <div className={`flex flex-col flex-1 ${tutorialHighlight === 'map-input' ? 'ring-2 ring-offset-2 ring-primary' : ''}`} id="map-input">
           <SelectMap
             mapsData={maps}
             selectedMap={selectedMap}
             handleMapChange={handleMapChange}
           />
         </div>
+
+        <div className="flex justify-between items-center mb-8">
+          <button 
+            onClick={showTutorialManually} 
+            className="btn btn-circle btn-ghost"
+            title="Show Tutorial"
+          >
+            <HelpCircle size={24} />
+          </button>
+        </div>
+
         {/* Account Tag Selection */}
-        <div className="relative w-96">
+        <div className={`flex flex-col w-96 relative ${tutorialHighlight === 'account-input' ? 'ring-2 ring-offset-2 ring-primary' : ''}`} id="account-input">
           <input
             type="text"
             id="accountTag"
@@ -378,7 +432,7 @@ const BrawlStarsDraft = () => {
             <div className="flex flex-col gap-1">
               {bannedBrawlers.map((brawler, index) => (
                 <div key={index} className="flex items-center bg-base-300 p-2 rounded-lg">
-                  <Image 
+                  <img
                     src={brawler.imageUrl}
                     alt={brawler.name}
                     width={40}
@@ -404,7 +458,7 @@ const BrawlStarsDraft = () => {
             </button>
           </div>
           {/* Ban Mode Toggle */}
-          <div className="form-control w-52 mb-1 group relative">
+          <div className={`form-control w-52 mb-1 group relative ${tutorialHighlight === 'ban-mode' ? 'ring-2 ring-offset-2 ring-primary' : ''}`} id="ban-mode">
             <label className="cursor-pointer label">
               <span className="label-text text-xl">Ban Mode</span>
               <input
@@ -427,7 +481,7 @@ const BrawlStarsDraft = () => {
         </div>
 
         {/* Middle: Current Map and Teams */}
-        <div className="lg:w-3/6 relative">
+        <div className={`lg:w-3/6 relative ${tutorialHighlight === 'predict-winrate' ? 'ring-2 ring-offset-2 ring-primary' : ''}`} id="predict-winrate">
           {/* Current Map Image */}
           {selectedMap && (
             <div className="card bg-base-200 shadow-md p-4 text-center mb-8">
@@ -445,7 +499,7 @@ const BrawlStarsDraft = () => {
                   <div className="space-y-2">
                     {teamA.map((brawler, index) => (
                       <div key={index} className="flex items-center gap-2">
-                        <Image 
+                        <img
                           src={brawler.imageUrl}
                           alt={brawler.name}
                           width={40}
@@ -470,7 +524,7 @@ const BrawlStarsDraft = () => {
                   <div className="space-y-2">
                     {teamB.map((brawler, index) => (
                       <div key={index} className="flex items-center gap-2">
-                        <Image 
+                        <img
                           width={40}
                           height={40}
                           src={brawler.imageUrl}
@@ -492,14 +546,14 @@ const BrawlStarsDraft = () => {
 
                 {/* Win Rate Indicator - Shows when both teams are full and win rate is available */}
                 {teamA.length === 3 && teamB.length === 3 && (
-                  <div className="absolute bottom-0 left-0 right-0 p-2 bg-base-300 bg-opacity-90 group">
-                    <div className="text-center font-bold cursor-help">
+                  <div className={`absolute bottom-0 left-0 right-0 p-2 bg-base-300 bg-opacity-90 group`}>
+                    <div className={`text-center font-bold cursor-help`}>
                       {isLoadingWinRate ? (
                         <span className="loading loading-dots loading-md"></span>
                       ) : (
                         <>
                           <span>Match Prediction</span>
-                          <div className="opacity-100 absolute bottom-full left-0 right-0 p-3 bg-base-200 rounded-md shadow-lg z-10">
+                          <div className={`opacity-100 absolute bottom-full left-0 right-0 p-3 bg-base-200 rounded-md shadow-lg z-10`}>
                             {winRate !== null ? (
                               <div className="flex flex-col items-center gap-1">
                                 <span className={`text-xl font-bold ${getWinRateColorClass()}`}>
@@ -539,7 +593,7 @@ const BrawlStarsDraft = () => {
         {/* Right Side: Top 10 Brawlers */}
         <div className="lg:w1/6">
           {submissionResult && (
-            <div className="card bg-base-200 shadow-md p-4">
+            <div className={`card bg-base-200 shadow-md p-4 ${tutorialHighlight === 'top-10-brawlers' ? 'ring-2 ring-offset-2 ring-primary' : ''}`} id="top-10-brawlers">
               <h2 className="text-xl md:text-lg sm:text-sm font-bold mb-4 text-center">
                 Best 10 Brawlers for <span className="text-primary">{selectedMap}</span> by AI Score
               </h2>
@@ -550,7 +604,7 @@ const BrawlStarsDraft = () => {
                     className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 transform hover:-translate-y-2"
                   >
                     <figure className="px-3 pt-3">
-                      <Image 
+                      <img
                         width={64}
                         height={64}
                         src={brawler.imageUrl}
@@ -598,10 +652,7 @@ const BrawlStarsDraft = () => {
 
       {/* Brawlers Grid */}
       {submissionResult && (
-
-
-
-        <div className="grid grid-cols-[repeat(24,1fr)]">
+        <div className={`grid grid-cols-[repeat(24,1fr)] ${tutorialHighlight === 'brawler-grid' ? 'ring-2 ring-offset-2 ring-primary' : ''}`} id="brawler-grid">
         {filteredBrawlers.map((brawler: Brawler) => {
           const status = getBrawlerStatus(brawler);
           let statusClass = "border-2 border-transparent";
@@ -620,7 +671,7 @@ const BrawlStarsDraft = () => {
                 handleBrawlerClick(brawler, "B");
               }}
             >
-              <Image
+              <img
                 width={55}
                 height={55} 
                 src={brawler.imageUrl}
@@ -632,6 +683,43 @@ const BrawlStarsDraft = () => {
           );
         })}
       </div>
+      )}
+
+      {/* Tutorial Modal */}
+      {showTutorial && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="card bg-base-100 w-full max-w-md mx-4">
+            <div className="card-body">
+              <div className="flex justify-between items-center">
+                <h2 className="card-title text-xl">{tutorialSteps[tutorialStep].title}</h2>
+                <button onClick={closeTutorial} className="btn btn-sm btn-circle btn-ghost">
+                  <X size={20} />
+                </button>
+              </div>
+              <p className="py-4">{tutorialSteps[tutorialStep].content}</p>
+              <div className="card-actions justify-between mt-4">
+                <button 
+                  onClick={prevTutorialStep}
+                  className="btn btn-outline"
+                  disabled={tutorialStep === 0}
+                >
+                  Previous
+                </button>
+                <div>
+                  <span className="mr-4 text-sm">
+                    {tutorialStep + 1} of {tutorialSteps.length}
+                  </span>
+                  <button 
+                    onClick={nextTutorialStep}
+                    className="btn btn-primary"
+                  >
+                    {tutorialStep === tutorialSteps.length - 1 ? 'Finish' : 'Next'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -54,7 +54,7 @@ class AppConfig:
         battle_stats_path = os.path.join(self.BASE_DIR, "data", "model" , f"version_{self.game_version}", "stats.pkl")
         with open(battle_stats_path, "rb") as f:
             self.battleStats = pickle.load(f)
-            print("Successfully loaded tierlist")
+            print("Successfully loaded stats")
 
     def setTierList(self):
         tierlist_path = os.path.join(self.BASE_DIR, "data", "model" , f"version_{self.game_version}", "tierlist.json")

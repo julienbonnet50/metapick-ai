@@ -1,5 +1,6 @@
 import os
 import sys
+
 sys.path.append(os.getcwd())
 sys.path.append(os.path.abspath(os.path.dirname(p=__file__)))
 import time
@@ -9,6 +10,7 @@ from flask import Flask, request, jsonify
 from src.config.AppConfig import AppConfig
 from src.service import NeuralNetworkService
 from src.utils import battlesUtils
+from src.utils import accountUtils
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -234,6 +236,18 @@ def get_accountBrawlers():
         dataBrawlerAccount = battlesUtils.get_account_brawlers(player_tag=player_tag, API_KEY=appConfig.API_KEY, BASE_URL=appConfig.BASE_URL)
         
         return battlesUtils.get_brawlers_with_high_power(dataBrawlerAccount)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/account-upgrade-helper', methods=['POST'])
+def get_upgrade_helper():
+    try: 
+        data = request.get_json()
+        player_tag = data.get('player_tag', '')
+        dataBrawlerAccount = battlesUtils.get_account_brawlers(player_tag=player_tag, API_KEY=appConfig.API_KEY, BASE_URL=appConfig.BASE_URL)
+        
+        return accountUtils.get_cost_and_score_by_account(player_tag=player_tag, data=appConfig.dataTierList, api_key=appConfig.API_KEY, base_url=appConfig.BASE_URL)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

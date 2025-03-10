@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import BrawlStarsDraft from "@components/BrawlStarsDraft";
 import { useDataContext } from '@components/DataProviderContext';
-import ClientLayout from "@components/ClientLayout";
 
 const DraftTool: React.FC = () => {
   const { isLoading } = useDataContext();
@@ -22,11 +21,9 @@ const DraftTool: React.FC = () => {
 
   return (
     <div>
-      <ClientLayout>
         <main className="flex flex-col">
-          <BrawlStarsDraft />
+            <BrawlStarsDraft />
         </main>
-      </ClientLayout>
     </div>
   );
 };

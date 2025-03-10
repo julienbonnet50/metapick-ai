@@ -115,66 +115,64 @@ const TierListPage: React.FC = () => {
   }
 
   return (
-    <ClientLayout>
-      <main className="container mx-auto p-4">
-        <div className="card bg-base-100 shadow-xl mb-6">
-          <div className="card-body p-4">
-            <h1 className="card-title text-xl font-bold text-primary">Brawl Stars Tier List</h1>
-            
-            <SelectMap
-              mapsData={maps}
-              selectedMap={selectedMap}
-              handleMapChange={handleMapChange}
-            />
-          </div>
+    <main className="container mx-auto p-4">
+      <div className="card bg-base-100 shadow-xl mb-6">
+        <div className="card-body p-4">
+          <h1 className="card-title text-xl font-bold text-primary">Brawl Stars Tier List</h1>
+          
+          <SelectMap
+            mapsData={maps}
+            selectedMap={selectedMap}
+            handleMapChange={handleMapChange}
+          />
         </div>
+      </div>
 
-        {selectedMap && tierData.length > 0 ? (
-          <div className="space-y-2">
-            {Object.keys(tieredBrawlers).map((tier) => (
-              tieredBrawlers[tier].length > 0 && (
-                <div key={tier} className="flex flex-col shadow-md rounded-md overflow-hidden">
-                  <div className={`${getTierColors(tier).bg} ${getTierColors(tier).text} py-2 px-4 flex items-center`}>
-                    <div className="font-bold text-lg mr-2">{tier}</div>
-                    <div className="text-sm">TIER</div>
-                  </div>
-                    <div className="bg-base-100 p-2"> 
-                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2">
-                        {tieredBrawlers[tier].map(([brawlerName, score], index) => {
-                          const brawler = brawlers.find(b => b.name.toUpperCase() === brawlerName); // Find the brawler object from the brawlers array
-                          if (!brawler) return null; // If brawler not found, skip this iteration
-
-                          return (
-                            <div key={index} className="card bg-base-200 shadow-sm hover:shadow-md transition-shadow">
-                              <div className="card-body p-1 gap-y-1 text-xs">
-                                {/* Display the brawler's image */}
-                                
-                                <Image
-                                  width={150}
-                                  height={150}
-                                  src={brawler.imageUrl} // Image URL for the brawler
-                                  alt={brawlerName}
-                                  className="h-14 sm:h-10 md:h-10 lg:h-14 xl:h-18 object-contain mx-auto"
-                                />
-                                <h3 className="font-bold text-center truncate" title={brawlerName}>{brawlerName}</h3>
-                                <div className="text-center opacity-70">{score.toFixed(2)}</div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
+      {selectedMap && tierData.length > 0 ? (
+        <div className="space-y-2">
+          {Object.keys(tieredBrawlers).map((tier) => (
+            tieredBrawlers[tier].length > 0 && (
+              <div key={tier} className="flex flex-col shadow-md rounded-md overflow-hidden">
+                <div className={`${getTierColors(tier).bg} ${getTierColors(tier).text} py-2 px-4 flex items-center`}>
+                  <div className="font-bold text-lg mr-2">{tier}</div>
+                  <div className="text-sm">TIER</div>
                 </div>
-              )
-            ))}
-          </div>
-        ) : (
-          !isLoading && (
-            <CoffeeWaiting name="tier list" description="The tier list will show brawlers ranked by their performance"></CoffeeWaiting>
-          )
-        )}
-      </main>
-    </ClientLayout>
+                  <div className="bg-base-100 p-2"> 
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2">
+                      {tieredBrawlers[tier].map(([brawlerName, score], index) => {
+                        const brawler = brawlers.find(b => b.name.toUpperCase() === brawlerName); // Find the brawler object from the brawlers array
+                        if (!brawler) return null; // If brawler not found, skip this iteration
+
+                        return (
+                          <div key={index} className="card bg-base-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="card-body p-1 gap-y-1 text-xs">
+                              {/* Display the brawler's image */}
+                              
+                              <img
+                                width={150}
+                                height={150}
+                                src={brawler.imageUrl} // Image URL for the brawler
+                                alt={brawlerName}
+                                className="h-14 sm:h-10 md:h-10 lg:h-14 xl:h-18 object-contain mx-auto"
+                              />
+                              <h3 className="font-bold text-center truncate" title={brawlerName}>{brawlerName}</h3>
+                              <div className="text-center opacity-70">{score.toFixed(2)}</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+              </div>
+            )
+          ))}
+        </div>
+      ) : (
+        !isLoading && (
+          <CoffeeWaiting name="tier list" description="The tier list will show brawlers ranked by their performance"></CoffeeWaiting>
+        )
+      )}
+    </main>
   );
 };
 

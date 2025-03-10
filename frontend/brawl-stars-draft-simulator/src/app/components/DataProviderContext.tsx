@@ -2,8 +2,6 @@
 import { fetchBrawlers, fetchGameVersions, fetchMaps } from 'app/utils/api';
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 
-const BASE_URL = process.env.NEXT_PUBLIC_ENDPOINT_BASE_URL || "https://metapick-ai.onrender.com";
-
 const DataProviderContext = createContext<DataProviderContextType | undefined>(undefined);
 
 interface DataProviderContextProps {
@@ -15,6 +13,11 @@ export const DataProvider = ({ children }: DataProviderContextProps) => {
   const [latestVersion, setLatestVersion] = useState<GameVersion | null>(null);
   const [maps, setMaps] = useState<MapBs[]>([]);
   const [isLoading, setLoading] = useState<boolean>(true);
+  const STORAGE_KEY = 'brawlstars-account-tag';
+  const TUTORIAL_SHOWN_KEY = 'brawlstars-tutorial-shown';
+  const TUTORIAL_LAST_SHOWN_KEY = 'brawlstars-tutorial-last-shown-date';
+  const BASE_URL = process.env.NEXT_PUBLIC_ENDPOINT_BASE_URL || "https://metapick-ai.onrender.com";
+
 
   useEffect(() => {
     const loadData = async () => {
@@ -53,7 +56,14 @@ export const DataProvider = ({ children }: DataProviderContextProps) => {
   }, []);
 
   return (
-    <DataProviderContext.Provider value={{ brawlers, maps, baseUrl: BASE_URL, isLoading, latestVersion}}>
+    <DataProviderContext.Provider value={{ 
+        brawlers, maps, 
+        baseUrl: BASE_URL, 
+        isLoading, latestVersion, 
+        storageKey: STORAGE_KEY,
+        torialShownKey: TUTORIAL_SHOWN_KEY,
+        tutorialLastShownKey: TUTORIAL_LAST_SHOWN_KEY
+        }}>
       {children}
     </DataProviderContext.Provider>
   );

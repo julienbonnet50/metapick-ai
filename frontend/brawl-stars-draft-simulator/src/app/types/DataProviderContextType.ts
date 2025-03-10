@@ -4,4 +4,5 @@ interface DataProviderContextType {
   baseUrl: string;
   isLoading: boolean;
   latestVersion: GameVersion | null;
+  storageKey: string;
 }

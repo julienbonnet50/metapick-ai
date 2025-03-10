@@ -1,5 +1,3 @@
-// dropChances.js
-
 function getDropChances() {
     return [
       {

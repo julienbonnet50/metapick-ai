@@ -37,6 +37,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
     { name: 'Draft tool', path: '/draft-tool' },
     { name: 'Stats', path: '/stats' },
     { name: 'Tier List', path: '/tier-list' },
+    { name: 'Upgrade Helper', path: '/upgrade-helper' },
     { name: 'Star drop simulator', path: '/star-drop-simulator'},
     { name: 'About', path: '/about' },
   ];
@@ -48,7 +49,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
         <div className="flex items-center">
           <Link href="/">
             <div className="flex items-center">
-              <Image
+              <img
                 width={40}
                 height={40}
                 src="/web-app-manifest-192x192.png"  
@@ -60,6 +61,21 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
           </Link>
         </div>
         
+        {/* Middle - Version Info */}
+        <div className="hidden md:flex items-center justify-center px-4">
+          {isLoading ? (
+            <div className="text-sm">Loading version info...</div>
+          ) : latestVersion ? (
+            <div className="text-sm bg-gradient-to-r from-rose-950 to-yellow-800 rounded-full px-4 py-2 shadow-md flex items-center justify-center space-x-2 border border-gray-700 text-gray-200">
+              <span><span className="text-violet-400 justify-center">Mythic+</span>{" ranked games analyzed: " + latestVersion.count.toLocaleString()}</span>
+              <span className="h-1 w-1 bg-gray-500 rounded-full justify-center"></span>
+              <span>{"Updated from " + formatDate(latestVersion.date)}</span>
+            </div>
+          ) : (
+            <div className="text-sm">Version info unavailable</div>
+          )}
+        </div>
+
         {/* Navigation Links - Desktop */}
         <div className="hidden md:flex space-x-6 mx-4">
           {navLinks.map((link) => (
@@ -73,23 +89,6 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
               {link.name}
             </Link>
           ))}
-        </div>
-        
-        {/* Middle - Version Info */}
-        <div className="hidden md:flex items-center justify-center px-4">
-          {isLoading ? (
-            <div className="text-sm">Loading version info...</div>
-          ) : latestVersion ? (
-            <div className="text-sm bg-gradient-to-r from-rose-950 to-yellow-800 rounded-full px-4 py-2 shadow-md flex items-center justify-center space-x-2 border border-gray-700 text-gray-200">
-              <span className="font-semibold text-white justify-center">Version {latestVersion.version}</span>
-              <span className="h-1 w-1 bg-gray-500 rounded-full justify-center"></span>
-              <span><span className="text-violet-400 justify-center">Mythic+</span>{" ranked games analyzed: " + latestVersion.count.toLocaleString()}</span>
-              <span className="h-1 w-1 bg-gray-500 rounded-full justify-center"></span>
-              <span>{"Updated from " + formatDate(latestVersion.date)}</span>
-            </div>
-          ) : (
-            <div className="text-sm">Version info unavailable</div>
-          )}
         </div>
         
         {/* Right side - How to Use button and Mobile Menu Toggle */}

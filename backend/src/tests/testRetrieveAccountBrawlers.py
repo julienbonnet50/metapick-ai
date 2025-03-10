@@ -33,5 +33,5 @@ def get_brawlers_with_high_power(data):
 data = battlesUtils.get_account_brawlers("CJLPY29V", appConfig.API_KEY, appConfig.BASE_URL)
 
 # Calling the function
-result = get_brawlers_with_high_power(data)
+result = battlesUtils.get_brawlers_with_high_power(data)
 print(result)
