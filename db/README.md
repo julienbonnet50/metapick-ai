@@ -11,6 +11,8 @@ SELECT 'battles_s35_3', COUNT(*) FROM battles_s35_3
 UNION ALL
 SELECT 'battles_s35_2', COUNT(*) FROM battles_s35_2
 UNION ALL
+SELECT 'battles_s36_1', COUNT(*) FROM battles_s36_1
+UNION ALL
 SELECT 'players', COUNT(*) FROM dbo.players
 UNION ALL
 SELECT 'players mythics+', COUNT(*) FROM dbo.players WHERE "last_rank" > 15 OR "max_rank" > 15
