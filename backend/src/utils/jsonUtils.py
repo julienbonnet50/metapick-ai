@@ -1,5 +1,6 @@
 import json
 
+
 def read_json(filename="battlelog.json"):
     try:
         with open(filename, "r") as json_file:

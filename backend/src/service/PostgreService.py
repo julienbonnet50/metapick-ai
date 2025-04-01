@@ -2,22 +2,24 @@ from datetime import datetime
 import json
 import os
 import sys
+
 sys.path.append(os.getcwd())
 sys.path.append(os.path.abspath(os.path.dirname(p=__file__)))
 import psycopg2
 
-class PostgreService():
+
+class PostgreService:
     def __init__(self, appConfig):
         # Load environment variables from the .env file
         self.appConfig = appConfig
         # Database connection parameters
         db_params = {
-            'dbname': 'bs-project',
-            'user': 'postgres',
-            'password': self.appConfig.POSTGRE_SQL_PASSWORD,
-            'host': 'localhost',
-            'port': '5432',
-            'schema': 'dbo'
+            "dbname": "bs-project",
+            "user": "postgres",
+            "password": self.appConfig.POSTGRE_SQL_PASSWORD,
+            "host": "localhost",
+            "port": "5432",
+            "schema": "dbo",
         }
 
         self.cursor = None
@@ -26,20 +28,22 @@ class PostgreService():
         # Create a connection to the PostgreSQL database
         try:
             self.conn = psycopg2.connect(
-                dbname=db_params['dbname'],
-                user=db_params['user'],
-                password=db_params['password'],
-                host=db_params['host'],
-                port=db_params['port']
+                dbname=db_params["dbname"],
+                user=db_params["user"],
+                password=db_params["password"],
+                host=db_params["host"],
+                port=db_params["port"],
             )
             self.cursor = self.conn.cursor()
-            print('Successfully connected to the PostgreSQL database')
+            print("Successfully connected to the PostgreSQL database")
         except psycopg2.Error as e:
             print(f"Error connecting to the database: {e}")
             exit(1)
 
     # Function to insert data into the players table
-    def insert_or_update_player(self, tag, last_rank, max_rank, insert_date, last_update_date, show=False):
+    def insert_or_update_player(
+        self, tag, last_rank, max_rank, insert_date, last_update_date, show=False
+    ):
         insert_query = """
             INSERT INTO dbo.players (tag, last_rank, max_rank, insert_date, last_update_date)
             VALUES (%s, %s, %s, %s, %s)
@@ -55,8 +59,12 @@ class PostgreService():
             if self.cursor is None or self.conn is None:
                 return "Database connection is not established"
 
-            self.conn.autocommit = False  # Ensure changes are committed only when successful
-            self.cursor.execute(insert_query, (tag, last_rank, max_rank, insert_date, last_update_date))
+            self.conn.autocommit = (
+                False  # Ensure changes are committed only when successful
+            )
+            self.cursor.execute(
+                insert_query, (tag, last_rank, max_rank, insert_date, last_update_date)
+            )
             self.conn.commit()
             if show:
                 print(f"Successfully inserted or updated player with tag: {tag}")
@@ -65,13 +73,19 @@ class PostgreService():
             if show:
                 print(f"Error inserting/updating data: {e}")
 
-    def insert_battle_stats(self, id, timestamp, map, mode, avg_rank, wTeam, lTeam, insert_date):
-        timestamp_str = timestamp[0].rstrip('Z')  # Remove the trailing 'Z'
-        date = datetime.strptime(timestamp_str, "%Y%m%dT%H%M%S.%f").date()  # Parse the date part
+    def insert_battle_stats(
+        self, id, timestamp, map, mode, avg_rank, wTeam, lTeam, insert_date
+    ):
+        timestamp_str = timestamp[0].rstrip("Z")  # Remove the trailing 'Z'
+        date = datetime.strptime(
+            timestamp_str, "%Y%m%dT%H%M%S.%f"
+        ).date()  # Parse the date part
 
         # Convert to a 'yyyy-mm-dd' string
         formatted_date = date.strftime("%Y-%m-%d")
-        tableName = self.get_correct_battle_version(formatted_date, self.appConfig.data_all_game_version)
+        tableName = self.get_correct_battle_version(
+            formatted_date, self.appConfig.data_all_game_version
+        )
         insert_query = f"""
         INSERT INTO {tableName} (id, timestamp, map, mode, avg_rank, wTeam, lTeam, insert_date)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
@@ -80,15 +94,15 @@ class PostgreService():
             if self.cursor is None or self.conn is None:
                 return "Database connection is not established"
 
-            self.cursor.execute(insert_query, (
-                id, timestamp, map, mode, avg_rank, wTeam, lTeam, insert_date
-            ))
+            self.cursor.execute(
+                insert_query,
+                (id, timestamp, map, mode, avg_rank, wTeam, lTeam, insert_date),
+            )
             self.conn.commit()
             # print(f"Successfully inserted battle stats : {id} {timestamp} {map} {mode} {avg_rank} {wTeam} {lTeam} {insert_date}")
         except psycopg2.Error as e:
             self.conn.rollback()
             # print(f"Error inserting data: {e}")
-    
 
     def get_all_players(self):
         select_query = "SELECT * FROM dbo.players;"
@@ -102,7 +116,7 @@ class PostgreService():
         except psycopg2.Error as e:
             print(f"Error retrieving data: {e}")
             return []
-        
+
     def execute_custom_query(self, query):
         try:
             if self.cursor is None or self.conn is None:
@@ -113,7 +127,7 @@ class PostgreService():
         except psycopg2.Error as e:
             print(f"Error executing query: {e}")
             return []
-        
+
     import psycopg2
 
     def create_battles_table_version(self, version):
@@ -128,7 +142,7 @@ class PostgreService():
             lTeam TEXT,
             insert_date VARCHAR(255)
         );"""
-        
+
         try:
             if self.conn is None or self.cursor is None:
                 return "Database connection is not established"
@@ -143,11 +157,10 @@ class PostgreService():
             print(f"Error creating table: {e}")
             return f"Error: {e}"  # Return the actual error message
 
-
     def get_all_players_from_rank(self, rank, mode):
         if mode not in ["below", "above"]:
             raise Exception(f"wrong mode used : {mode}")
-        
+
         if mode == "below":
             placeHolder = "<"
         else:
@@ -165,7 +178,6 @@ class PostgreService():
             print(f"Error retrieving data: {e}")
             return []
 
-
     def closeDbConnection(self):
         # Close the cursor and connection
         self.cursor.close()
@@ -173,7 +185,7 @@ class PostgreService():
 
     def get_correct_battle_version(self, target_date, data):
         target_date = datetime.strptime(target_date, "%Y-%m-%d").date()
-        
+
         # Create a valid sorted list, skipping invalid dates
         valid_data = []
         for entry in data:
@@ -181,9 +193,13 @@ class PostgreService():
                 entry_date = datetime.strptime(entry["date"], "%Y-%m-%d").date()
                 valid_data.append(entry)
             except ValueError:
-                print(f"Warning: Skipping invalid date {entry['date']} for version {entry['version']}")
-        
-        sorted_data = sorted(valid_data, key=lambda x: datetime.strptime(x["date"], "%Y-%m-%d").date())
+                print(
+                    f"Warning: Skipping invalid date {entry['date']} for version {entry['version']}"
+                )
+
+        sorted_data = sorted(
+            valid_data, key=lambda x: datetime.strptime(x["date"], "%Y-%m-%d").date()
+        )
 
         # If target_date is before the first recorded entry, return the first valid version
         if target_date < datetime.strptime(sorted_data[0]["date"], "%Y-%m-%d").date():
@@ -202,16 +218,16 @@ class PostgreService():
 
         # If target_date is after all entries, return the last known version
         return "battles_s" + sorted_data[-1]["version"]
-    
+
     def get_battle_count(self, version):
         """Query PostgreSQL to get battle count for a specific version."""
         query = f"SELECT COUNT(*) FROM battles_s{version};"
-        
+
         try:
             if self.conn is None or self.cursor is None:
                 return "Database connection is not established"
 
-            print(f"Starting to create table battles_s{version}")            
+            print(f"Starting to create table battles_s{version}")
             cur = self.conn.cursor()
             cur.execute(query)
             count = cur.fetchone()[0]
@@ -220,14 +236,14 @@ class PostgreService():
         except Exception as e:
             print(f"Database error: {e}")
             return None
-    
+
     def update_game_version(self, version, game_version_path):
         """Update the JSON file with the latest battle count for the given version."""
         count = self.get_battle_count(version)
         if count is None:
             print(f"Could not update count for version {version}")
             return
-        
+
         # Load the current data
         try:
             with open(game_version_path, "r") as file:
@@ -235,7 +251,7 @@ class PostgreService():
         except FileNotFoundError:
             print(f"File not found: {game_version_path}")
             return
-        
+
         # Find the matching version and update count
         updated = False
         for entry in data:
@@ -250,4 +266,3 @@ class PostgreService():
             print(f"Updated version {version} count to {count}")
         else:
             print(f"Version {version} not found in data file.")
-
