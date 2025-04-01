@@ -1,0 +1,48 @@
+name: Python Application Test
+
+on:
+  push:
+    branches: [ main, master, dev ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install flask flask-cors pytest pytest-cov; fi
+        
+    - name: Create test directory structure
+      run: |
+        mkdir -p data/model/version_1
+        touch data/model/version_1/mappings.pkl
+        touch data/model/version_1/nn_model_all.pth
+        
+    - name: Run unit tests
+      run: |
+        pytest tests/test_app.py -v
+        
+    - name: Run integration tests
+      run: |
+        pytest tests/test_integration.py -v
+        
+    - name: Generate test coverage report
+      run: |
+        pytest --cov=. --cov-report=xml
+        
+    - name: Upload coverage report
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false
