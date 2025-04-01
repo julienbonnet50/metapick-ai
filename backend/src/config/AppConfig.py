@@ -10,12 +10,17 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 class AppConfig:
     def __init__(self):
         load_dotenv()
+        self.logs_level = int(os.getenv("LOGS_LEVEL", "1"))
+
+        # Base app
+        self.MODE = os.getenv("MODE", "IMPORT")
         self.BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         self.API_KEY = os.getenv("API_KEY", "")
         self.POSTGRE_SQL_PASSWORD = os.getenv("POSTGRE_SQL_PASSWORD", "")
         self.BASE_URL = "https://api.brawlstars.com/v1"
         self.OWN_PLAYER_TAG =  os.getenv("OWN_PLAYER_TAG")
-        self.logs_level = int(os.getenv("LOGS_LEVEL", "1"))
+
+        # Network
         self.GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
         self.GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
         self.FLASK_ENV = os.getenv("FLASK_ENV", "local")
@@ -25,7 +30,6 @@ class AppConfig:
         self.origins = []
 
         self.origins.append(os.getenv("ORIGIN", "*"))
-
         self.port = int(os.environ.get("PORT", 10000))
 
         self.data_game_version = None
@@ -44,11 +48,13 @@ class AppConfig:
         # Load data from JSON file
         self.setDataIndex()
         self.setBrawler()
+        self.setDataMaps()
         self.setDataGameVersion()
         self.setLatestGameVersion()
-        self.setDataMaps()
-        self.setTierList()
-        self.setBattleStatsData()
+
+        if self.MODE and self.MODE != "IMPORT":
+            self.setTierList()
+            self.setBattleStatsData()
 
     def setBattleStatsData(self):
         battle_stats_path = os.path.join(self.BASE_DIR, "data", "model" , f"version_{self.game_version}", "stats.pkl")
@@ -78,7 +84,7 @@ class AppConfig:
             
             if mapName not in insertedMapNames:
                 for currentRankedMap in self.data_game_version['ranked_maps']:
-                    if mapName == currentRankedMap:
+                    if mapName.lower() == currentRankedMap.lower():
                         mapsToAdd = {
                             "name": mapName,
                             "gameMode": map['gameMode']['name'],

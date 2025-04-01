@@ -11,7 +11,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 
 appConfig = AppConfig.AppConfig()
 
-version = "35_3"
+version = appConfig.game_version
 
 # Construct the correct paths using BASE_DIR
 data_path = os.path.join(BASE_DIR, "data", "model", f"version_{version}", "mappings.pkl")
@@ -30,11 +30,11 @@ friend_brawlers = ['SPIKE']
 enemy_brawlers = ['AMBER']
 available_brawlers = ["SHELLY","COLT","RICO","NITA","MORTIS","POCO","DARRYL","PENNY","FRANK","GENE","BYRON","STU","ASH","EVE","GUS","MAISIE","HANK","PEARL","LARRY & LAWRIE","MELODIE","KENJI","JUJU","OLLIE"]
 
-print(neuralNetworkService.predict_best_brawler(friends=friend_brawlers, enemies=enemy_brawlers, map_name=mapName, excluded=excluded_brawlers, available_brawlers=available_brawlers))
+print("Top predictions for", mapName, ":", neuralNetworkService.predict_best_brawler(friends=friend_brawlers, enemies=enemy_brawlers, map_name=mapName, excluded=excluded_brawlers, available_brawlers=available_brawlers))
 
 
 mapName = 'Center Stage'
 friend_brawlers = ['SPIKE', 'MORTIS', 'DYNAMIKE']
 enemy_brawlers = ['AMBER', 'GUS', 'RICO']
 
-print(neuralNetworkService.predict_winrate(friends=friend_brawlers, enemies=enemy_brawlers, map_name=mapName))  
+print("Winrate predicted for", mapName, ":", neuralNetworkService.predict_winrate(friends=friend_brawlers, enemies=enemy_brawlers, map_name=mapName))  

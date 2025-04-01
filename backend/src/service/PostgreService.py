@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 import os
 import sys
 sys.path.append(os.getcwd())
@@ -143,22 +144,6 @@ class PostgreService():
             return f"Error: {e}"  # Return the actual error message
 
 
-
-
-    def get_all_battles(self):
-        select_query = "SELECT * FROM battles;"
-        try:
-            if self.cursor is None or self.conn is None:
-                return "Database connection is not established"
-
-            self.cursor.execute(select_query)
-            players = self.cursor.fetchall()
-            column_names = [desc[0] for desc in self.cursor.description]
-            return players, column_names
-        except psycopg2.Error as e:
-            print(f"Error retrieving data: {e}")
-            return [], []
-    
     def get_all_players_from_rank(self, rank, mode):
         if mode not in ["below", "above"]:
             raise Exception(f"wrong mode used : {mode}")
@@ -217,3 +202,52 @@ class PostgreService():
 
         # If target_date is after all entries, return the last known version
         return "battles_s" + sorted_data[-1]["version"]
+    
+    def get_battle_count(self, version):
+        """Query PostgreSQL to get battle count for a specific version."""
+        query = f"SELECT COUNT(*) FROM battles_s{version};"
+        
+        try:
+            if self.conn is None or self.cursor is None:
+                return "Database connection is not established"
+
+            print(f"Starting to create table battles_s{version}")            
+            cur = self.conn.cursor()
+            cur.execute(query)
+            count = cur.fetchone()[0]
+            cur.close()
+            return count
+        except Exception as e:
+            print(f"Database error: {e}")
+            return None
+    
+    def update_game_version(self, version, game_version_path):
+        """Update the JSON file with the latest battle count for the given version."""
+        count = self.get_battle_count(version)
+        if count is None:
+            print(f"Could not update count for version {version}")
+            return
+        
+        # Load the current data
+        try:
+            with open(game_version_path, "r") as file:
+                data = json.load(file)
+        except FileNotFoundError:
+            print(f"File not found: {game_version_path}")
+            return
+        
+        # Find the matching version and update count
+        updated = False
+        for entry in data:
+            if entry["version"] == version:
+                entry["count"] = count
+                updated = True
+                break
+
+        if updated:
+            with open(game_version_path, "w") as file:
+                json.dump(data, file, indent=4)
+            print(f"Updated version {version} count to {count}")
+        else:
+            print(f"Version {version} not found in data file.")
+

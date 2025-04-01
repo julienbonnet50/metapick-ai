@@ -1,5 +1,38 @@
 [
     {
+        "version": "36_1",
+        "date": "2025-03-27",
+        "name": "s36",
+        "description": "finx_lumi",
+        "count": 1317062,
+        "ranked_maps": [
+            "Belle's Rock",
+            "Below Zero",
+            "Center Stage",
+            "Cool Box",
+            "Double Swoosh",
+            "Dry Season",
+            "Dueling Beetles",
+            "Flaring Phoenix",
+            "Gem Fort",
+            "Hard Rock Mine",
+            "Hideout",
+            "Layer Cake",
+            "New Horizons",
+            "Open Business",
+            "Out in the Open",
+            "Parallel Plays",
+            "Pinball Dreams",
+            "Ring of Fire",
+            "Shooting Star",
+            "Sneaky Fields",
+            "Starr Garden",
+            "Super Center",
+            "Triple Dribble",
+            "Undermine"
+        ]
+    },
+    {
         "version": "35_3",
         "date": "2025-03-03",
         "name": "s35",
