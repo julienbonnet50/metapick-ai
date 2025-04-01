@@ -175,7 +175,7 @@ def simulate_draft():
         return jsonify(response)
         
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error with simulate draft endpoint": str(e)}), 500
     
 @app.route('/predict_winrate', methods=['POST'])
 def predict_winrate():
@@ -203,7 +203,7 @@ def predict_winrate():
         return str(predicted_winrate)
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error with predict winrate": str(e)}), 500
     
 @app.route('/tier_list', methods=['POST'])
 def get_tier_list():
@@ -215,7 +215,7 @@ def get_tier_list():
             if item['mapName'] == mapName:
                 return  jsonify(item['tierList'])
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error with tier list endpoint": str(e)}), 500
     
 @app.route('/stats', methods=['POST'])
 def get_stats_per_map():
@@ -226,7 +226,7 @@ def get_stats_per_map():
         filteredDf = appConfig.battleStats[appConfig.battleStats["map"] == mapName] if mapName else appConfig.battleStats
         return filteredDf.to_dict(orient="records")
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error with stats endpoint": str(e)}), 500
     
 @app.route('/account', methods=['POST'])
 def get_accountBrawlers():
@@ -238,19 +238,17 @@ def get_accountBrawlers():
         return battlesUtils.get_brawlers_with_high_power(dataBrawlerAccount)
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error with account endpoint": str(e)}), 500
     
 @app.route('/account-upgrade-helper', methods=['POST'])
 def get_upgrade_helper():
     try: 
         data = request.get_json()
-        player_tag = data.get('player_tag', '')
-        dataBrawlerAccount = battlesUtils.get_account_brawlers(player_tag=player_tag, API_KEY=appConfig.API_KEY, BASE_URL=appConfig.BASE_URL)
-        
+        player_tag = data.get('player_tag', '')        
         return accountUtils.get_cost_and_score_by_account(player_tag=player_tag, data=appConfig.dataTierList, api_key=appConfig.API_KEY, base_url=appConfig.BASE_URL)
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error with upgrade-helper endpoint": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=appConfig.port)
