@@ -9,3 +9,5 @@ data/*
 
 test.json
 training_loss_plot.png
+.pytest_cache
+backend/src/tests/

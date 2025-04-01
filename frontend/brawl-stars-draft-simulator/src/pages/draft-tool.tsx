@@ -8,16 +8,16 @@ const DraftTool: React.FC = () => {
   const [retryCount, setRetryCount] = useState<number>(0);
   const [statusMessage, setStatusMessage] = useState<string>("Connecting to server...");
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-        <div className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
-        <p className="mt-4 text-xl">Loading Brawl Stars Draft</p>
-        <p className="mt-2 text-sm text-gray-600">{statusMessage}</p>
-        <p className="mt-2 text-xs text-gray-500">Retry attempt: {retryCount}</p>
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+  //       <div className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
+  //       <p className="mt-4 text-xl">Loading Brawl Stars Draft</p>
+  //       <p className="mt-2 text-sm text-gray-600">{statusMessage}</p>
+  //       <p className="mt-2 text-xs text-gray-500">Retry attempt: {retryCount}</p>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div>
