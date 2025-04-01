@@ -6,6 +6,8 @@ import { X, CheckCircle2, AlertOctagonIcon, HelpCircle} from "lucide-react";
 import { useDataContext } from "./DataProviderContext";
 import DraftInstructions from "@components/DraftInstructions";
 import { getDraftToolTutorials } from "app/utils/tutorials";
+import CachedImage from "@components/CachedImage";
+import imageCache from '../utils/cacheImage';
 
 const safeToFixed = (value: number, decimals: number = 2) => {
   return typeof value === 'number' ? value.toFixed(decimals) : 'N/A';
@@ -42,6 +44,13 @@ const BrawlStarsDraft = () => {
 
     // Load from cache on mount
     useEffect(() => {
+      const preloadAllImages = async () => {
+        const imageSources = brawlers.map(brawler => brawler.imageUrl);
+        await imageCache.preloadImages(imageSources);
+      };
+      
+      preloadAllImages();
+
       const cachedTag = localStorage.getItem(STORAGE_KEY);
       if (cachedTag) setAccountTag(cachedTag);
     }, []);
@@ -439,7 +448,7 @@ const BrawlStarsDraft = () => {
               <div className="flex flex-col gap-1">
                 {bannedBrawlers.map((brawler, index) => (
                   <div key={index} className="flex items-center bg-base-300 p-2 rounded-lg">
-                    <img
+                    <CachedImage
                       src={brawler.imageUrl}
                       alt={brawler.name}
                       width={40}
@@ -508,7 +517,7 @@ const BrawlStarsDraft = () => {
                   <div className="space-y-2">
                     {teamA.map((brawler, index) => (
                       <div key={index} className="flex items-center gap-2">
-                        <img
+                        <CachedImage
                           src={brawler.imageUrl}
                           alt={brawler.name}
                           width={40}
@@ -533,7 +542,7 @@ const BrawlStarsDraft = () => {
                   <div className="space-y-2">
                     {teamB.map((brawler, index) => (
                       <div key={index} className="flex items-center gap-2">
-                        <img
+                        <CachedImage
                           width={40}
                           height={40}
                           src={brawler.imageUrl}
@@ -613,7 +622,7 @@ const BrawlStarsDraft = () => {
                     className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 transform hover:-translate-y-2"
                   >
                     <figure className="px-3 pt-3">
-                      <img
+                      <CachedImage
                         width={64}
                         height={64}
                         src={brawler.imageUrl}
@@ -682,7 +691,7 @@ const BrawlStarsDraft = () => {
                 handleBrawlerClick(brawler, "B");
               }}
             >
-              <img
+              <CachedImage
                 width={55}
                 height={55} 
                 src={brawler.imageUrl}

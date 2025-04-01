@@ -4,7 +4,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useDataContext } from "./DataProviderContext";
+import metapickIcon from "../../../public/web-app-manifest-192x192.png";
 
+// import imgBlocMap3 from '../../public/img/image_bloc3.png';
 interface NavbarProps {
   toggleHowToUse: () => void;
   showHowToUse: boolean;
@@ -49,13 +51,20 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
         <div className="flex items-center">
           <Link href="/">
             <div className="flex items-center">
-              <img
+              <Image
+                width={40}
+                height={40}
+                src={metapickIcon}
+                alt="Logo"
+                >
+              </Image>
+              {/* <img
                 width={40}
                 height={40}
                 src="/web-app-manifest-192x192.png"  
                 alt="Logo"
                 className="h-10 mr-4" 
-              />
+              /> */}
               <h1 className="text-xl font-bold">Metapick-AI</h1>
             </div>
           </Link>
