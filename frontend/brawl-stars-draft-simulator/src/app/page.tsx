@@ -104,21 +104,6 @@ const Home: React.FC = () => {
             </div>
           </Link>
           
-          {/* Star Drop Simulator */}
-          <Link href="/star-drop-simulator" className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow hover:border-primary hover:border">
-            <div className="card-body">
-              <div className="flex items-center mb-4">
-                <div className="p-3 rounded-lg bg-primary/10">
-                  <Gift size={24} className="text-primary" />
-                </div>
-                <h2 className="card-title ml-3">Star Drop Simulator</h2>
-              </div>
-              <p className="text-base-content/70">
-                Test your luck with our star drop simulator and see what rewards you might get.
-              </p>
-            </div>
-          </Link>
-          
           {/* About */}
           <Link href="/about" className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow hover:border-primary hover:border">
             <div className="card-body">

@@ -40,7 +40,6 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
     { name: 'Stats', path: '/stats' },
     { name: 'Tier List', path: '/tier-list' },
     { name: 'Upgrade Helper', path: '/upgrade-helper' },
-    { name: 'Star drop simulator', path: '/star-drop-simulator'},
     { name: 'About', path: '/about' },
   ];
 
@@ -58,13 +57,6 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
                 alt="Logo"
                 >
               </Image>
-              {/* <img
-                width={40}
-                height={40}
-                src="/web-app-manifest-192x192.png"  
-                alt="Logo"
-                className="h-10 mr-4" 
-              /> */}
               <h1 className="text-xl font-bold">Metapick-AI</h1>
             </div>
           </Link>

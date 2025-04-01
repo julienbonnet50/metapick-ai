@@ -4,6 +4,8 @@ import { useState } from "react";
 import Navbar from "@components/Navbar";
 import HowToUseDraft from "@components/HowToUseDraft";
 import BottomNavbar from "@components/BottomNavbar"; // Import BottomNavbar
+import Seo from "@components/Seo";
+import metapickIcon from '../../public/favicon-96x96.png'
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const [showHowToUse, setShowHowToUse] = useState(false);
@@ -12,6 +14,12 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   
   return (
     <div className="flex flex-col min-h-screen">
+      <Seo 
+        title="Metapick-AI" 
+        description="Your complete toolkit for mastering Brawl Stars - stats, tier lists, draft tools, and more to dominate every match." 
+        url="https://metapick-ai.vercel.app/" 
+        image={metapickIcon.src}
+      />
       <Navbar toggleHowToUse={toggleHowToUse} showHowToUse={showHowToUse} />
       {showHowToUse && <HowToUseDraft />}
       <main className="flex-grow">{children}</main>
