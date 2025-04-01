@@ -5,7 +5,7 @@ import Navbar from "@components/Navbar";
 import HowToUseDraft from "@components/HowToUseDraft";
 import BottomNavbar from "@components/BottomNavbar"; // Import BottomNavbar
 import Seo from "@components/Seo";
-import metapickIcon from '../../public/favicon-96x96.png'
+import metapickIcon from '../../../public/web-app-manifest-192x192.png'
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const [showHowToUse, setShowHowToUse] = useState(false);
