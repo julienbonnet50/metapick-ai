@@ -2,17 +2,17 @@ function getUpgradeHelperTutorials() {
     return [
     {
       title: "Enter Your Tag",
-      content: "Enter your Brawl Stars player tag to see upgrade recommendations. Your tag should have 9 characters and might start with #.",
+      content: "Enter your Brawl Stars player tag to see upgrade recommendations. Your tag should have 5-10 characters and might start with #.",
       highlight: "account-input"
     },
     {
-      title: "Recommended Upgrades",
+      title: "Top 5 Upgrades",
       content: "After analysis, you'll see your top 5 brawlers recommended for upgrades based on your account data.",
       highlight: "recommended-upgrades"
     },
     {
-      title: "Sort Your Brawlers",
-      content: "You can sort all your brawlers by clicking on the column headers. This helps you find the best upgrade options.",
+      title: "List of your brawler not upgraded",
+      content: "List of all your brawlers not upgraded (doesn't have at least 1 gadget and 1 star power), sorted by AI score showing also costs to upgrade. Hypercharge (5k coins) is always included.",
       highlight: "all-brawlers"
     }
   ]; 

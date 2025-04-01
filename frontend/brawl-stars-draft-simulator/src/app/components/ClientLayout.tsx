@@ -1,18 +1,34 @@
+// ClientLayout.tsx
 "use client";
 import { useState } from "react";
 import Navbar from "@components/Navbar";
 import HowToUseDraft from "@components/HowToUseDraft";
+import BottomNavbar from "@components/BottomNavbar"; // Import BottomNavbar
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const [showHowToUse, setShowHowToUse] = useState(false);
-
+  
   const toggleHowToUse = () => setShowHowToUse(!showHowToUse);
-
+  
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
       <Navbar toggleHowToUse={toggleHowToUse} showHowToUse={showHowToUse} />
       {showHowToUse && <HowToUseDraft />}
-      {children}
-    </>
+      <main className="flex-grow">{children}</main>
+      
+      {/* Bottom Navbar Component */}
+      <BottomNavbar />
+      
+      <footer className="bg-base-200 py-3 text-center border-t border-base-300">
+        <div className="container mx-auto px-4">
+          <p className="text-sm text-base-content/70">
+            This site is not affiliated with, endorsed, sponsored, or specifically approved by Supercell and Supercell is not responsible for it.
+          </p>
+          <p className="text-xs text-base-content/50 mt-1">
+            All game content and materials are trademarks and copyrights of Supercell.
+          </p>
+        </div>
+      </footer>
+    </div>
   );
 }

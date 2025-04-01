@@ -28,7 +28,7 @@ export const DataProvider = ({ children }: DataProviderContextProps) => {
       setLatestVersion(gameVersionData);
 
       // Sort brawlers and maps
-      const excludedBrawlerName = 'Lumi';
+      const excludedBrawlerName = '';
       const filteredBrawlers = brawlersData
         .filter((brawler: Brawler) => brawler.name !== excludedBrawlerName)
         .map((brawler: Brawler) => {

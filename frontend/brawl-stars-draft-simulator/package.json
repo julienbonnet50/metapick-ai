@@ -19,7 +19,7 @@
     "brawl-stars-draft-simulator": "file:",
     "jquery": "^3.7.1",
     "lucide-react": "^0.479.0",
-    "next": "^15.2.1",
+    "next": "^15.2.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.2.0",

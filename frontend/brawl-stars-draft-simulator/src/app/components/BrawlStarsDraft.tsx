@@ -4,6 +4,7 @@ import Image from 'next/image';
 import SelectMap from "./SelectMap";
 import { X, CheckCircle2, AlertOctagonIcon, HelpCircle} from "lucide-react";
 import { useDataContext } from "./DataProviderContext";
+import DraftInstructions from "@components/DraftInstructions";
 import { getDraftToolTutorials } from "app/utils/tutorials";
 
 const safeToFixed = (value: number, decimals: number = 2) => {
@@ -56,6 +57,8 @@ const BrawlStarsDraft = () => {
       alert("Please select a map.");
       return;
     }
+
+    clearSearch();
 
     // Check if the brawler is already in any team or banned
     const isInTeamA = teamA.some(b => b.id === brawler.id);
@@ -380,6 +383,8 @@ const BrawlStarsDraft = () => {
           />
         </div>
 
+        {/* Tutorial Button */}
+        {selectedMap && (
         <div className="flex justify-between items-center mb-8">
           <button 
             onClick={showTutorialManually} 
@@ -389,6 +394,7 @@ const BrawlStarsDraft = () => {
             <HelpCircle size={24} />
           </button>
         </div>
+        )}
 
         {/* Account Tag Selection */}
         <div className={`flex flex-col w-96 relative ${tutorialHighlight === 'account-input' ? 'ring-2 ring-offset-2 ring-primary' : ''}`} id="account-input">
@@ -426,59 +432,62 @@ const BrawlStarsDraft = () => {
       {/* Main Content Layout */}
       <div className="flex flex-col lg:flex-row gap-8 mb-8">
         {/* Left Side: Banned Brawlers */}
-        <div className="lg:w-1/6">
-          <div className="card bg-base-200 shadow-md p-4">
-            <h2 className="text-xl font-bold text-center mb-4">Banned ({bannedBrawlers.length}/6)</h2>
-            <div className="flex flex-col gap-1">
-              {bannedBrawlers.map((brawler, index) => (
-                <div key={index} className="flex items-center bg-base-300 p-2 rounded-lg">
-                  <img
-                    src={brawler.imageUrl}
-                    alt={brawler.name}
-                    width={40}
-                    height={40}
-                    className="w-10 h-10 object-cover rounded-full mr-2"
-                  />
-                  <span className="badge badge-error">{brawler.name}</span>
-                </div>
-              ))}
-              {/* Empty slots for banned brawlers */}
-              {Array.from({ length: Math.max(0, 6 - bannedBrawlers.length) }).map((_, index) => (
-                <div key={`empty-${index}`} className="flex items-center bg-base-300 p-2 rounded-lg opacity-30">
-                  <div className="w-10 h-10 rounded-full bg-gray-400 mr-2"></div>
-                  <span className="badge badge-outline">Empty</span>
-                </div>
-              ))}
+        {selectedMap && (
+          <div className="lg:w-1/6">
+            <div className="card bg-base-200 shadow-md p-4">
+              <h2 className="text-xl font-bold text-center mb-4">Banned ({bannedBrawlers.length}/6)</h2>
+              <div className="flex flex-col gap-1">
+                {bannedBrawlers.map((brawler, index) => (
+                  <div key={index} className="flex items-center bg-base-300 p-2 rounded-lg">
+                    <img
+                      src={brawler.imageUrl}
+                      alt={brawler.name}
+                      width={40}
+                      height={40}
+                      className="w-10 h-10 object-cover rounded-full mr-2"
+                    />
+                    <span className="badge badge-error">{brawler.name}</span>
+                  </div>
+                ))}
+                {/* Empty slots for banned brawlers */}
+                {Array.from({ length: Math.max(0, 6 - bannedBrawlers.length) }).map((_, index) => (
+                  <div key={`empty-${index}`} className="flex items-center bg-base-300 p-2 rounded-lg opacity-30">
+                    <div className="w-10 h-10 rounded-full bg-gray-400 mr-2"></div>
+                    <span className="badge badge-outline">Empty</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-          {/* Submit and Reset Buttons */}
-          <div className="flex justify-center gap-4 mb-8">
-            <button className="btn btn-success" onClick={handleReset}>
-              Reset Draft
-            </button>
-          </div>
-          {/* Ban Mode Toggle */}
-          <div className={`form-control w-52 mb-1 group relative ${tutorialHighlight === 'ban-mode' ? 'ring-2 ring-offset-2 ring-primary' : ''}`} id="ban-mode">
-            <label className="cursor-pointer label">
-              <span className="label-text text-xl">Ban Mode</span>
-              <input
-                type="checkbox"
-                className="toggle toggle-error"
-                checked={isBanMode}
-                onChange={toggleBanMode}
-              />
-            </label>
+            {/* Submit and Reset Buttons */}
+            <div className="flex justify-center gap-4 mb-8">
+              <button className="btn btn-success" onClick={handleReset}>
+                Reset Draft
+              </button>
+            </div>
+            {/* Ban Mode Toggle */}
+            <div className={`form-control w-52 mb-1 group relative ${tutorialHighlight === 'ban-mode' ? 'ring-2 ring-offset-2 ring-primary' : ''}`} id="ban-mode">
+              <label className="cursor-pointer label">
+                <span className="label-text text-xl">Ban Mode</span>
+                <input
+                  type="checkbox"
+                  className="toggle toggle-error"
+                  checked={isBanMode}
+                  onChange={toggleBanMode}
+                />
+              </label>
+              
 
-            {/* Notification-style message that shows on hover */}
-            <div
-              className={`absolute top-full left-0 mt-1 p-2 rounded-md text-sm w-full ${ 
-                isBanMode ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700' } 
-                opacity-0 group-hover:opacity-100 transition-all duration-300`}
-            >
-              <p>{isBanMode ? "Click on brawlers to ban them (max 6)" : "Click to add to Team A, right-click for Team B"}</p>
+              {/* Notification-style message that shows on hover */}
+              <div
+                className={`absolute top-full left-0 mt-1 p-2 rounded-md text-sm w-full ${ 
+                  isBanMode ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700' } 
+                  opacity-0 group-hover:opacity-100 transition-all duration-300`}
+              >
+                <p>{isBanMode ? "Click on brawlers to ban them (max 6)" : "Click to add to Team A, right-click for Team B"}</p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Middle: Current Map and Teams */}
         <div className={`lg:w-3/6 relative ${tutorialHighlight === 'predict-winrate' ? 'ring-2 ring-offset-2 ring-primary' : ''}`} id="predict-winrate">
@@ -589,10 +598,10 @@ const BrawlStarsDraft = () => {
             </div>
           )}
         </div>
-
+              
         {/* Right Side: Top 10 Brawlers */}
         <div className="lg:w1/6">
-          {submissionResult && (
+          {submissionResult && selectedMap && (
             <div className={`card bg-base-200 shadow-md p-4 ${tutorialHighlight === 'top-10-brawlers' ? 'ring-2 ring-offset-2 ring-primary' : ''}`} id="top-10-brawlers">
               <h2 className="text-xl md:text-lg sm:text-sm font-bold mb-4 text-center">
                 Best 10 Brawlers for <span className="text-primary">{selectedMap}</span> by AI Score
@@ -631,6 +640,7 @@ const BrawlStarsDraft = () => {
       </div>
 
       {/* Search bar */}
+      {selectedMap && (
         <div className="mb-8 relative">
           <input
             type="text"
@@ -649,9 +659,10 @@ const BrawlStarsDraft = () => {
             </button>
           )}
         </div>
+      )}
 
       {/* Brawlers Grid */}
-      {submissionResult && (
+      {submissionResult && selectedMap ? (
         <div className={`grid grid-cols-[repeat(24,1fr)] ${tutorialHighlight === 'brawler-grid' ? 'ring-2 ring-offset-2 ring-primary' : ''}`} id="brawler-grid">
         {filteredBrawlers.map((brawler: Brawler) => {
           const status = getBrawlerStatus(brawler);
@@ -683,7 +694,12 @@ const BrawlStarsDraft = () => {
           );
         })}
       </div>
-      )}
+      ) : (
+        <DraftInstructions 
+        title="Brawler Draft Instructions" 
+        subtitle="Select a map to start draft tool !" 
+      />
+    )}
 
       {/* Tutorial Modal */}
       {showTutorial && (

@@ -1,14 +1,14 @@
 "use client"
 import { useDataContext } from '@components/DataProviderContext';
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, X, HelpCircle } from 'lucide-react'; // Added HelpCircle icon
+import { CheckCircle2, X, HelpCircle, AlertCircle } from 'lucide-react'; // Added AlertCircle icon
 import { getUpgradeHelperTutorials } from '../app/utils/tutorials';
 
 const UpgradeHelper = () => {
   const { baseUrl, storageKey, torialShownKey, tutorialLastShownKey, brawlers } = useDataContext();
   const [data, setData] = useState<PlayerAccountHelper[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [accountNotFound, setAccountNotFound] = useState(false); // New state for account not found
   const [accountTag, setAccountTag] = useState<string>('');
   const [isAccountTagValid, setAccountTagValid] = useState<boolean | null>(null);
   const [sortField, setSortField] = useState('score');
@@ -24,6 +24,7 @@ const UpgradeHelper = () => {
   const clearInput = () => {
     setAccountTag("");
     setAccountTagValid(null);
+    setAccountNotFound(false); // Reset account not found state
     localStorage.removeItem(storageKey);
     setData([]);
   };
@@ -33,12 +34,13 @@ const UpgradeHelper = () => {
     const newValue = e.target.value;
     setAccountTag(newValue);
     validateInput(newValue);
+    setAccountNotFound(false); // Reset account not found state when input changes
     localStorage.setItem(storageKey, newValue);
   };
 
   // Validate input and set validation state
   const validateInput = (tag: string) => {
-    const tagPattern = /^#?[A-Za-z0-9]{9}$/; // Allows optional '#' followed by exactly 9 alphanumeric characters
+    const tagPattern = /^#?[A-Za-z0-9]{5,10}$/; // Allows optional '#' followed by 5-10 alphanumeric characters
     setAccountTagValid(tagPattern.test(tag));
   };
 
@@ -47,12 +49,12 @@ const UpgradeHelper = () => {
     e.preventDefault();
     
     if (!isAccountTagValid) {
-      setError("Please enter a valid player tag");
+      setAccountNotFound(true); // Set account not found flag instead of error message
       return;
     }
     
     setLoading(true);
-    setError(null);
+    setAccountNotFound(false);
     
     try {
       // Format the tag (ensure it has # at the beginning)
@@ -67,6 +69,16 @@ const UpgradeHelper = () => {
       });
       
       if (!response.ok) {
+        if (response.status === 500) {
+          // Internal server error
+          throw new Error('Server error occurred. Please try again later.');
+        }
+        if (response.status === 404) {
+          // Not Found error
+          setAccountNotFound(true);
+          throw new Error('Account not found');
+        }
+        // Handle other errors or unexpected status codes
         throw new Error(`Error: ${response.status}`);
       }
       
@@ -81,7 +93,7 @@ const UpgradeHelper = () => {
       }
     } catch (error: unknown) {
       console.error("Error fetching data:", error);
-      setError(error instanceof Error ? error.message : "An unknown error occurred");
+      setAccountNotFound(true); // Set account not found flag instead of error message
       setData([]);
     } finally {
       setLoading(false);
@@ -216,7 +228,7 @@ const UpgradeHelper = () => {
                   id="accountTag"
                   name="accountTag"
                   placeholder="Account Tag (#GZ95SFSKJ3)"
-                  className="input input-bordered w-full pr-10"
+                  className={`input input-bordered w-full pr-10 ${accountNotFound ? 'input-error' : ''}`}
                   value={accountTag}
                   onChange={handleInputChange}
                   required
@@ -228,6 +240,14 @@ const UpgradeHelper = () => {
                     className="absolute right-8 top-1/2 transform -translate-y-1/2 text-green-500"
                     size={20}
                   />
+                )}
+                
+                {/* Account Not Found Indicator */}
+                {accountNotFound && (
+                  <div className="absolute -bottom-6 left-0 text-xs text-error flex items-center">
+                    <AlertCircle size={12} className="mr-1" />
+                    Account not found
+                  </div>
                 )}
                 
                 {/* Clear Button (Only Show When Input is Not Empty) */}
@@ -251,11 +271,7 @@ const UpgradeHelper = () => {
               </button>
             </form>
             
-            {error && (
-              <div className="alert alert-error mb-4">
-                <span>{error}</span>
-              </div>
-            )}
+            {/* Removed the error alert div that was here previously */}
           </div>
         </div>
         
