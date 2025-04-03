@@ -619,16 +619,16 @@ const BrawlStarsDraft = () => {
                 {teamA.length === 3 && teamB.length === 3 && (
                   <div className="absolute bottom-0 left-0 right-0 p-1 sm:p-2 bg-base-300 bg-opacity-90 group">
                     <div className="text-center text-xs sm:text-base font-bold cursor-help">
-                      {isLoadingWinRate ? (
+                      {winRateQuery.isLoading ? (
                         <span className="loading loading-dots loading-sm sm:loading-md"></span>
                       ) : (
                         <>
                           <span>Match Prediction</span>
                           <div className="opacity-100 absolute bottom-full left-0 right-0 p-2 sm:p-3 bg-base-200 rounded-md shadow-lg z-10">
-                            {winRate !== null ? (
+                            {winRateQuery !== null ? (
                               <div className="flex flex-col items-center gap-1">
                                 <span className={`text-sm sm:text-xl font-bold ${getWinRateColorClass()}`}>
-                                  {safeToFixed(winRate, 1)}% Win Rate
+                                  {safeToFixed(winRateQuery.data, 1)}% Win Rate
                                 </span>
                                 <span className={`text-xs sm:text-base ${getWinRateColorClass()}`}>
                                   {getWinRateText()}
@@ -636,10 +636,10 @@ const BrawlStarsDraft = () => {
                                 <div className="w-full bg-gray-300 rounded-full h-2 sm:h-4 mt-1 sm:mt-2">
                                   <div 
                                     className={`h-2 sm:h-4 rounded-full ${
-                                      winRate >= 52 ? 'bg-success' : 
-                                      winRate >= 48 ? 'bg-warning' : 'bg-error'
+                                      winRateQuery.data >= 52 ? 'bg-success' : 
+                                      winRateQuery.data >= 48 ? 'bg-warning' : 'bg-error'
                                     }`}
-                                    style={{ width: `${Math.min(100, Math.max(0, winRate))}%` }}
+                                    style={{ width: `${Math.min(100, Math.max(0, winRateQuery.data))}%` }}
                                   ></div>
                                 </div>
                                 <p className="text-xs mt-1 sm:mt-2 hidden sm:block">
