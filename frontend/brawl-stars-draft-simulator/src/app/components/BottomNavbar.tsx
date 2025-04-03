@@ -31,12 +31,6 @@ const BottomNavbar = () => {
             </Link>
           </div>
         </div>
-        
-        <div className="text-center mt-2">
-          <p className="text-xs text-base-content/60">
-            Not affiliated with Supercell
-          </p>
-        </div>
       </div>
     </div>
   );

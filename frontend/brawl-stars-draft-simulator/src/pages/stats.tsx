@@ -100,7 +100,7 @@ const StatsPage: React.FC = () => {
             <main className="container mx-auto p-4">
                 <div className="flex items-center justify-between mb-4 space-x-4">
                     <div className="w-1/3">
-                        <h1 className="card-title text-xl font-bold text-primary mb-2 title-f">Ranked maps statistics</h1>
+                        <h1 className="card-title text-xl font-bold text-primary mb-2 title-font">Ranked maps statistics</h1>
                         <SelectMap
                             mapsData={maps}
                             selectedMap={selectedMap}

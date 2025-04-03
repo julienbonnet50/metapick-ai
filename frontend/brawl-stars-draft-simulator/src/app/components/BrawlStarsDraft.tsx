@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Image from 'next/image';
 import SelectMap from "./SelectMap";
-import { X, CheckCircle2, AlertOctagonIcon, HelpCircle} from "lucide-react";
+import { X, CheckCircle2, AlertOctagonIcon, HelpCircle, XCircle} from "lucide-react";
 import { useDataContext } from "./DataProviderContext";
 import DraftInstructions from "@components/DraftInstructions";
 import { getDraftToolTutorials } from "app/utils/tutorials";
@@ -35,6 +35,7 @@ const BrawlStarsDraft = () => {
   {/* User account */}
   const [accountTag, setAccountTag] = useState("");
   const [isAccountTagValid, setAccountTagValid] = useState<boolean | null>(null);
+  const [isAccountTagFetched, setAccountTagFetched] = useState<boolean>(false);
   const STORAGE_KEY = "accountTag"; // Key for localStorage
 
   {/* Tutorial related states */}
@@ -155,7 +156,7 @@ const BrawlStarsDraft = () => {
       }));
     },
     staleTime: ONE_DAY_MS, // 1 day stale time
-    enabled: !!selectedMap,
+    enabled: !!selectedMap && isAccountTagFetched,
   });
 
   // React Query for available brawlers
@@ -175,14 +176,24 @@ const BrawlStarsDraft = () => {
           player_tag: accountTag,
         }),
       });
-  
+    
+      if (response.status === 404) {
+        throw new Error("Account not found");
+      }
+
+      if (response.status === 500) {
+        throw new Error("Server error occurred. Please try again later.");
+      }
+
       if (!response.ok) {
         throw new Error("Failed to fetch user account");
       }
-  
+      
+      setAccountTagFetched(true);
+      console.log("Account tag fetched:", accountTag);
       return await response.json();
     },
-    staleTime: ONE_DAY_MS, // 1 day stale time
+    staleTime: 1, // 1 day stale time
     enabled: Boolean(isAccountTagValid && accountTag), // Ensure this is always a boolean
   });
 
@@ -320,6 +331,7 @@ const BrawlStarsDraft = () => {
   const clearInput = () => {
     setAccountTag("");
     setAccountTagValid(null);
+    setAccountTagFetched(false);
     localStorage.removeItem(STORAGE_KEY);
     
     // Invalidate the query
@@ -449,13 +461,32 @@ const BrawlStarsDraft = () => {
               required
             />
 
-            {/* Validation Icon (Only Show When Valid) */}
-            {isAccountTagValid && availableBrawlersQuery && (
+            {/* Validation Icon (Handle Loading, Valid, and Error States) */}
+            {isAccountTagValid && isAccountTagFetched && availableBrawlersQuery && (
               <CheckCircle2 
                 className="absolute right-8 top-1/2 transform -translate-y-1/2 text-green-500" 
                 size={16} // ⬅ Smaller icon
               />
             )}
+
+            {/* Show Loading Circle when isAccountTagValid is true but isAccountTagFecthed is false */}
+            {isAccountTagValid && !isAccountTagFetched && (
+              <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
+                <svg className="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.25" />
+                  <path d="M22 12a10 10 0 1 1-10-10" fill="none"></path>
+                </svg>
+              </div>
+            )}
+
+            {/* Show Cross when isAccountTagValid is false and isAccountTagFecthed is false */}
+            {!isAccountTagValid && !isAccountTagFetched && (
+              <XCircle 
+                className="absolute right-8 top-1/2 transform -translate-y-1/2 text-red-500" 
+                size={16} // ⬅ Smaller icon
+              />
+            )}
+
 
             {/* Clear Button (Only Show When Input is Not Empty) */}
             {accountTag && (
