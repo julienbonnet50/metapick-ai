@@ -221,6 +221,8 @@ def get_upgrade_helper():
     try:
         data = request.get_json()
         player_tag = data.get("player_tag", "")
+        logging.info("Retrieved account info of tag: " + player_tag)
+
         return accountUtils.get_cost_and_score_by_account(
             player_tag=player_tag,
             data=appConfig.data_tier_list,
