@@ -208,6 +208,7 @@ def get_account_brawlers():
             API_KEY=appConfig.API_KEY,
             BASE_URL=appConfig.BASE_URL,
         )
+        logging.info("Retrieved account info of tag: " + player_tag)
 
         return battlesUtils.get_brawlers_with_high_power(data_brawler_account)
 
