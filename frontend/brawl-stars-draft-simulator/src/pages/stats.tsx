@@ -1,39 +1,50 @@
-"use client"
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import SelectMap from "@components/SelectMap";
 import CoffeeWaiting from "@components/CoffeeWaiting";
 import { useDataContext } from "@components/DataProviderContext";
+import StatsComponent from "@components/StatsComponent";
+import ImageProvider from "@components/ImageProvider";
+import { useQuery } from '@tanstack/react-query';
+
 
 const StatsPage: React.FC = () => {
-    const { brawlers, maps, isLoading, baseUrl } = useDataContext();
+    const { brawlers, maps, isLoading: contextLoading, baseUrl } = useDataContext();
     
-    const [statsData, setStatsData] = useState<any>(null);
     const [selectedMap, setSelectedMap] = useState<string>("");
-    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'brawler', direction: 'asc' });
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ 
+        key: 'brawler', 
+        direction: 'asc' 
+    });
     const [brawlerFilter, setBrawlerFilter] = useState("");
-    const [minTotalMatches, setMinTotalMatches] = useState<number>(0); // New state for minimum total matches
+    const [minTotalMatches, setMinTotalMatches] = useState<number>(0);
 
-    const handleMapChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const selectedMapValue = e.target.value;
-        setSelectedMap(selectedMapValue);
-
-        if (selectedMapValue) {
-            try {
-                const response = await fetch(`${baseUrl}/stats`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ map: selectedMapValue }),
-                });
-
-                const data = await response.json();
-                setStatsData(data);
-            } catch (error) {
-                console.error("Error fetching tier data:", error);
-                setStatsData([]);
-            }
+    // Fetch stats data with React Query
+    const fetchStats = useCallback(async (map: string) => {
+        const response = await fetch(`${baseUrl}/stats`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ map }),
+        });
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
         }
+        return response.json();
+    }, [baseUrl]);
+
+    const { 
+        data: statsData, 
+        isLoading: statsLoading, 
+        error 
+    } = useQuery({
+        queryKey: ['stats', selectedMap],
+        queryFn: () => fetchStats(selectedMap),
+        staleTime: 24 * 60 * 60 * 1000, // 1 day
+        enabled: !!selectedMap, // Only run when selectedMap exists
+        retry: 2, // Retry failed requests twice
+    });
+
+    const handleMapChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setSelectedMap(e.target.value);
     };
 
     const handleSort = (key: string) => {
@@ -61,11 +72,13 @@ const StatsPage: React.FC = () => {
         setBrawlerFilter(e.target.value);
     };
 
-    const handleMinTotalMatchesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setMinTotalMatches(Number(e.target.value));
-    };
+    const filteredStats = sortedStats().filter((stat: any) => {
+        const matchesBrawlerFilter = stat.brawler.toLowerCase().includes(brawlerFilter.toLowerCase());
+        const matchesMinTotalMatches = stat.total_matches >= minTotalMatches;
+        return matchesBrawlerFilter && matchesMinTotalMatches;
+    });
 
-    if (isLoading) {
+    if (contextLoading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
                 <div className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
@@ -74,123 +87,58 @@ const StatsPage: React.FC = () => {
         );
     }
 
-    const filteredStats = sortedStats().filter((stat: any) => {
-        const matchesBrawlerFilter = stat.brawler.toLowerCase().includes(brawlerFilter.toLowerCase());
-        const matchesMinTotalMatches = stat.total_matches >= minTotalMatches;
-        return matchesBrawlerFilter && matchesMinTotalMatches;
-    });
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+                <p className="text-xl text-red-500">Error loading stats: {error.message}</p>
+            </div>
+        );
+    }
 
     return (
-        <main className="container mx-auto p-4">
-            <div className="flex items-center justify-between mb-4 space-x-4">
-                <div className="w-1/3">
-                    <h1 className="card-title text-xl font-bold text-primary mb-2">Ranked maps statistics</h1>
-                    <SelectMap
-                        mapsData={maps}
-                        selectedMap={selectedMap}
-                        handleMapChange={handleMapChange}
-                    />
-                </div>
-                <div className="w-1/3">
-                    <input
-                        type="text"
-                        placeholder="Filter brawlers..."
-                        className="input input-bordered w-full"
-                        value={brawlerFilter}
-                        onChange={handleBrawlerFilterChange}
-                    />
-                </div>
-            </div>
-
-            {selectedMap ? (
-                <div className="card bg-base-100 shadow-xl mb-6">
-                    <div className="card-body p-4">
-                        <h2 className="text-xl font-bold">{selectedMap} Stats</h2>
-                        <div className="overflow-x-auto">
-                            <table className="table w-full">
-                                <thead>
-                                    <tr>
-                                        <th
-                                            onClick={() => handleSort('brawler')}
-                                            className={`cursor-pointer ${sortConfig.key === 'brawler' ? (sortConfig.direction === 'asc' ? 'text-blue-500' : 'text-red-500') : ''}`}
-                                        >
-                                            Brawler
-                                            {sortConfig.key === 'brawler' && (sortConfig.direction === 'asc' ? ' ↑' : ' ↓')}
-                                        </th>
-                                        <th
-                                            onClick={() => handleSort('wins')}
-                                            className={`cursor-pointer ${sortConfig.key === 'wins' ? (sortConfig.direction === 'asc' ? 'text-blue-500' : 'text-red-500') : ''}`}
-                                        >
-                                            Wins
-                                            {sortConfig.key === 'wins' && (sortConfig.direction === 'asc' ? ' ↑' : ' ↓')}
-                                        </th>
-                                        <th
-                                            onClick={() => handleSort('losses')}
-                                            className={`cursor-pointer ${sortConfig.key === 'losses' ? (sortConfig.direction === 'asc' ? 'text-blue-500' : 'text-red-500') : ''}`}
-                                        >
-                                            Losses
-                                            {sortConfig.key === 'losses' && (sortConfig.direction === 'asc' ? ' ↑' : ' ↓')}
-                                        </th>
-                                        <th
-                                            onClick={() => handleSort('total_matches')}
-                                            className={`cursor-pointer ${sortConfig.key === 'total_matches' ? (sortConfig.direction === 'asc' ? 'text-blue-500' : 'text-red-500') : ''}`}
-                                        >
-                                            Total Matches
-                                            {sortConfig.key === 'total_matches' && (sortConfig.direction === 'asc' ? ' ↑' : ' ↓')}
-                                        </th>
-                                        <th
-                                            onClick={() => handleSort('win_rate')}
-                                            className={`cursor-pointer ${sortConfig.key === 'win_rate' ? (sortConfig.direction === 'asc' ? 'text-blue-500' : 'text-red-500') : ''}`}
-                                        >
-                                            Win Rate
-                                            {sortConfig.key === 'win_rate' && (sortConfig.direction === 'asc' ? ' ↑' : ' ↓')}
-                                        </th>
-                                        <th
-                                            onClick={() => handleSort('usage_rate')}
-                                            className={`cursor-pointer ${sortConfig.key === 'usage_rate' ? (sortConfig.direction === 'asc' ? 'text-blue-500' : 'text-red-500') : ''}`}
-                                        >
-                                            Usage Rate
-                                            {sortConfig.key === 'usage_rate' && (sortConfig.direction === 'asc' ? ' ↑' : ' ↓')}
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredStats.map((stat: any, index: number) => (
-                                        <tr key={index}>
-                                            {/* Add Brawler Image before Name */}
-                                            <td className="flex items-center">
-                                                <img
-                                                    width={20}
-                                                    height={20}
-                                                    src={
-                                                        brawlers.find((brawler: Brawler) => 
-                                                            (brawler.name.toUpperCase() === stat.brawler.toUpperCase() ||
-                                                            (stat.brawler === "LARRY & LAWRIE") && brawler.name.toUpperCase() === "LARRY")
-                                                        )?.imageUrl || "/default-image.png"
-                                                        }
-                                                    alt={stat.brawler}
-                                                    className="mr-2"
-                                                />
-                                                {stat.brawler}
-                                            </td>
-                                            <td>{stat.wins}</td>
-                                            <td>{stat.losses}</td>
-                                            <td>{stat.total_matches}</td>
-                                            <td>{(stat.win_rate).toFixed(2)}%</td>
-                                            <td>{(stat.usage_rate * 100).toFixed(2)}%</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+        <ImageProvider>
+            <main className="container mx-auto p-4">
+                <div className="flex items-center justify-between mb-4 space-x-4">
+                    <div className="w-1/3">
+                        <h1 className="card-title text-xl font-bold text-primary mb-2 title-f">Ranked maps statistics</h1>
+                        <SelectMap
+                            mapsData={maps}
+                            selectedMap={selectedMap}
+                            handleMapChange={handleMapChange}
+                        />
+                    </div>
+                    <div className="w-1/3">
+                        <input
+                            type="text"
+                            placeholder="Filter brawlers..."
+                            className="input input-bordered w-full"
+                            value={brawlerFilter}
+                            onChange={handleBrawlerFilterChange}
+                        />
                     </div>
                 </div>
-            ) : (
-                !isLoading && (
-                    <CoffeeWaiting name="ranked stats" description="The 'Stats' will show the raw data of brawlers winRate, useRate, wins and losses per map "></CoffeeWaiting>
-                )
-            )}
-        </main>
+
+                {statsLoading && selectedMap ? (
+                    <div className="flex justify-center my-8">
+                        <div className="w-12 h-12 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
+                    </div>
+                ) : selectedMap ? (
+                    <StatsComponent
+                        statsData={filteredStats}
+                        sortConfig={sortConfig}
+                        handleSort={handleSort}
+                        brawlers={brawlers}
+                    />
+                ) : (
+                    !contextLoading && (
+                        <CoffeeWaiting 
+                            name="ranked stats" 
+                            description="The 'Stats' will show the raw data of brawlers winRate, useRate, wins and losses per map"
+                        />
+                    )
+                )}
+            </main>
+        </ImageProvider>
     );
 };
 

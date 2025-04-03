@@ -13,27 +13,23 @@ const DraftInstructions: React.FC<DraftInstructionsProps> = ({
     <div className="card bg-base-200 shadow-xl">
       <div className="card-body items-center text-center p-8">
         <div className="text-5xl mb-4">🎮</div>
-        <h2 className="card-title text-xl font-bold mb-2">{title}</h2>
-        <p className="text-base mb-6">{subtitle}</p>
+        <h2 className="card-title text-5xl font-bold mb-2 title-font">{title}</h2>
+        <p className="text-xl mb-6 title-font">{subtitle}</p>
         
         <div className="divider my-4">How to Use</div>
         
-        <div className="grid grid-cols-1 gap-8 w-full max-w-lg">
+        <div className="flex flex-row gap-12 justify-center w-full">
           {/* Left Click Instruction */}
           <div className="flex flex-col items-center">
             <div className="mb-4">
-              <svg className="w-24 h-24" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                {/* Mouse body */}
+            <svg className="w-24 h-24" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="30" y="15" width="60" height="90" rx="30" fill="#F0F8FF" stroke="#3B82F6" strokeWidth="4"/>
-                {/* Left click button - highlighted */}
                 <path d="M30 45C30 30 40 15 60 15C50 15 30 20 30 45Z" fill="#3B82F6"/>
                 <path d="M30 45V75C30 90 40 105 60 105C80 105 90 90 90 75V45C90 30 80 15 60 15C40 15 30 30 30 45Z" stroke="#3B82F6" strokeWidth="4"/>
-                {/* Divider line */}
                 <path d="M60 15V105" stroke="#3B82F6" strokeWidth="2" strokeDasharray="4 4"/>
-                {/* Scroll wheel */}
                 <rect x="55" y="30" width="10" height="20" rx="5" fill="#DBEAFE" stroke="#3B82F6" strokeWidth="2"/>
-                {/* Cable */}
                 <path d="M60 105L60 115" stroke="#3B82F6" strokeWidth="4" strokeLinecap="round"/>
+                <circle cx="40" cy="40" r="8" fill="#3B82F6" stroke="white" strokeWidth="2"/>
               </svg>
             </div>
             <div className="bg-primary text-primary-content font-bold text-lg px-4 py-2 rounded-lg mb-2">
@@ -46,17 +42,13 @@ const DraftInstructions: React.FC<DraftInstructionsProps> = ({
           <div className="flex flex-col items-center">
             <div className="mb-4">
               <svg className="w-24 h-24" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                {/* Mouse body */}
-                <rect x="30" y="15" width="60" height="90" rx="30" fill="#FFF5F5" stroke="#EF4444" strokeWidth="4"/>
-                {/* Right click button - highlighted */}
+                <rect x="30" y="15" width="60" height="90" rx="30" fill="#F0F8FF" stroke="#EF4444" strokeWidth="4"/>
                 <path d="M90 45C90 30 80 15 60 15C70 15 90 20 90 45Z" fill="#EF4444"/>
                 <path d="M30 45V75C30 90 40 105 60 105C80 105 90 90 90 75V45C90 30 80 15 60 15C40 15 30 30 30 45Z" stroke="#EF4444" strokeWidth="4"/>
-                {/* Divider line */}
                 <path d="M60 15V105" stroke="#EF4444" strokeWidth="2" strokeDasharray="4 4"/>
-                {/* Scroll wheel */}
-                <rect x="55" y="30" width="10" height="20" rx="5" fill="#FEE2E2" stroke="#EF4444" strokeWidth="2"/>
-                {/* Cable */}
+                <rect x="55" y="30" width="10" height="20" rx="5" fill="#DBEAFE" stroke="#EF4444" strokeWidth="2"/>
                 <path d="M60 105L60 115" stroke="#EF4444" strokeWidth="4" strokeLinecap="round"/>
+                <circle cx="80" cy="40" r="8" fill="#EF4444" stroke="white" strokeWidth="2"/>
               </svg>
             </div>
             <div className="bg-error text-error-content font-bold text-lg px-4 py-2 rounded-lg mb-2">
@@ -83,10 +75,6 @@ const DraftInstructions: React.FC<DraftInstructionsProps> = ({
             </div>
             <p className="text-base">Switch to ban mode to add brawlers to bans</p>
           </div>
-        </div>
-        
-        <div className="mt-6 text-sm opacity-70">
-          Select a draft to start building your strategy
         </div>
       </div>
     </div>

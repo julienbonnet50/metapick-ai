@@ -1,46 +1,60 @@
-// imageCache.js
-const imageCache = {
-    cache: new Map(),
-    
-    // Add image to cache
-    async cacheImage(src) {
-      if (this.cache.has(src)) {
-        return this.cache.get(src);
-      }
-      
-      try {
-        const response = await fetch(src);
-        const blob = await response.blob();
-        const objectURL = URL.createObjectURL(blob);
-        this.cache.set(src, objectURL);
-        return objectURL;
-      } catch (error) {
-        console.error(`Failed to cache image: ${src}`, error);
-        return src; // Fallback to original source
-      }
-    },
-    
-    // Get image from cache or fetch it
-    async getImage(src) {
-      if (this.cache.has(src)) {
-        return this.cache.get(src);
-      }
-      
-      return this.cacheImage(src);
-    },
-    
-    // Preload multiple images
-    async preloadImages(sources) {
-      return Promise.all(sources.map(src => this.cacheImage(src)));
-    },
-    
-    // Clear cache (for memory management)
-    clearCache() {
-      this.cache.forEach(objectURL => {
-        URL.revokeObjectURL(objectURL);
-      });
-      this.cache.clear();
+class ImageCache {
+  constructor() {
+    this.cache = new Map();
+    this.loading = new Map();
+    this.ready = false;
+  }
+
+  async preloadImages(sources) {
+    const promises = sources.map(src => this.loadImage(src));
+    await Promise.all(promises);
+    this.ready = true;
+    return this;
+  }
+
+  async loadImage(src) {
+    if (this.cache.has(src)) {
+      return Promise.resolve(this.cache.get(src));
     }
-  };
-  
-  export default imageCache;
+
+    // If this image is already loading, return the existing promise
+    if (this.loading.has(src)) {
+      return this.loading.get(src);
+    }
+
+    // Create a new promise for this image
+    const loadPromise = new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        this.cache.set(src, src);
+        this.loading.delete(src);
+        resolve(src);
+      };
+      img.onerror = (error) => {
+        this.loading.delete(src);
+        reject(error);
+      };
+      img.src = src;
+    });
+
+    this.loading.set(src, loadPromise);
+    return loadPromise;
+  }
+
+  getImage(src) {
+    return this.cache.get(src) || src;
+  }
+
+  isReady() {
+    return this.ready;
+  }
+
+  clearCache() {
+    this.cache.clear();
+    this.loading.clear();
+    this.ready = false;
+  }
+}
+
+const imageCache = new ImageCache();
+export default imageCache;

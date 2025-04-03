@@ -12,13 +12,13 @@ const BottomNavbar = () => {
               href="/" 
               className="flex flex-col items-center text-primary hover:text-primary-focus transition-colors duration-200"
             >
-              <Home size={22} strokeWidth={1.5} />
+              <Home size={18} strokeWidth={1.5} />
               <span className="text-xs mt-1 font-medium">Home</span>
             </Link>
             
             <div className="flex items-center mx-2 md:mx-4">
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Coffee size={20} className="text-primary" />
+                <Coffee size={14} className="text-primary" />
               </div>
             </div>
             
@@ -26,7 +26,7 @@ const BottomNavbar = () => {
               href="/about" 
               className="flex flex-col items-center text-primary hover:text-primary-focus transition-colors duration-200"
             >
-              <Info size={22} strokeWidth={1.5} />
+              <Info size={18} strokeWidth={1.5} />
               <span className="text-xs mt-1 font-medium">About</span>
             </Link>
           </div>

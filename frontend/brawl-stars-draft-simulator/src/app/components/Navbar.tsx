@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useDataContext } from "./DataProviderContext";
 import metapickIcon from "../../../public/web-app-manifest-192x192.png";
 
 // import imgBlocMap3 from '../../public/img/image_bloc3.png';
@@ -15,20 +14,10 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
   {/* Data */}
-  const { isLoading, latestVersion } = useDataContext();
-
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const pathname = usePathname();
   
   // Format date to be more readable
-  const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -57,33 +46,18 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
                 alt="Logo"
                 >
               </Image>
-              <h1 className="text-xl font-bold">Metapick-AI</h1>
+              <h1 className="text-xl font-bold title-font">Metapick-AI</h1>
             </div>
           </Link>
         </div>
         
-        {/* Middle - Version Info */}
-        <div className="hidden md:flex items-center justify-center px-4">
-          {isLoading ? (
-            <div className="text-sm">Loading version info...</div>
-          ) : latestVersion ? (
-            <div className="text-sm bg-gradient-to-r from-rose-950 to-yellow-800 rounded-full px-4 py-2 shadow-md flex items-center justify-center space-x-2 border border-gray-700 text-gray-200">
-              <span><span className="text-violet-400 justify-center">Mythic+</span>{" ranked games analyzed: " + latestVersion.count.toLocaleString()}</span>
-              <span className="h-1 w-1 bg-gray-500 rounded-full justify-center"></span>
-              <span>{"Updated from " + formatDate(latestVersion.date)}</span>
-            </div>
-          ) : (
-            <div className="text-sm">Version info unavailable</div>
-          )}
-        </div>
-
         {/* Navigation Links - Desktop */}
         <div className="hidden md:flex space-x-6 mx-4">
           {navLinks.map((link) => (
             <Link
               key={link.path}
               href={link.path}
-              className={`hover:text-amber-300 transition-colors ${
+              className={`hover:text-amber-300 transition-colors title-font${
                 pathname === link.path ? 'text-amber-300 font-bold' : ''
               }`}
             >
@@ -92,17 +66,19 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
           ))}
         </div>
         
-        {/* Right side - How to Use button and Mobile Menu Toggle */}
+        {/* Right side - Mobile Menu Toggle */}
         <div className="flex items-center space-x-4">
-          {pathname === '/' && (
-            <button
-              onClick={toggleHowToUse}
-              className="px-4 py-2 bg-amber-800 rounded hover:bg-amber-700 transition-colors"
-            >
-              {showHowToUse ? "Hide Guide" : "How to Use"}
-            </button>
-          )}
           
+          {/* Buy Me a Coffee Button */}
+          <a 
+            href="https://www.buymeacoffee.com/metapickai" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="btn btn-primary bg-yellow-600 hover:bg-yellow-700 border-none text-white"
+          >
+            Buy Me a Coffee ☕
+          </a>
+
           {/* Mobile menu button */}
           <button 
             className="md:hidden bg-amber-800 p-2 rounded hover:bg-amber-700 transition-colors"
@@ -136,13 +112,6 @@ const Navbar: React.FC<NavbarProps> = ({ toggleHowToUse, showHowToUse }) => {
               </Link>
             ))}
             
-            {/* Mobile Version Info */}
-            {!isLoading && latestVersion && (
-              <div className="text-xs bg-gradient-to-r from-rose-950 to-yellow-800 rounded-full px-3 py-1 shadow-md mt-2">
-                <span className="font-semibold text-white">v{latestVersion.version}</span>{" "}
-                <span className="text-violet-400">Mythic+</span>{" games: " + latestVersion.count.toLocaleString()}
-              </div>
-            )}
           </div>
         </div>
       )}

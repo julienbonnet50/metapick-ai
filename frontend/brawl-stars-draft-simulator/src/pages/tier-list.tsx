@@ -1,111 +1,41 @@
 "use client";
-import ClientLayout from "@components/ClientLayout";
-import React, { useState, useEffect, useMemo } from "react";
-import { fetchBrawlers, fetchMaps } from "../app/utils/api";
+import React, { useState, useCallback } from "react";
 import SelectMap from "@components/SelectMap";
-import Image from 'next/image';
 import CoffeeWaiting from "@components/CoffeeWaiting";
 import { useDataContext } from "@components/DataProviderContext";
+import TierListComponent from "@components/TierListComponent";
+import ImageProvider from "@components/ImageProvider";
+import { useQuery } from "@tanstack/react-query";
 
+const fetchTierList = async (baseUrl: string, map: string) => {
+  const response = await fetch(`${baseUrl}/tier_list`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ map }),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch tier list");
+  }
+  return response.json();
+};
 
 const TierListPage: React.FC = () => {
-  const { brawlers, maps, isLoading, baseUrl } = useDataContext();
-  const [tierData, setTierData] = useState<any[]>([]); 
+  const { brawlers, maps, isLoading: contextLoading, baseUrl } = useDataContext();
   const [selectedMap, setSelectedMap] = useState<string>("");
 
-  const handleMapChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedMapValue = e.target.value;
-    setSelectedMap(selectedMapValue);
+  const { data: tierData, isLoading, error } = useQuery({
+    queryKey: ["tierList", selectedMap],
+    queryFn: () => fetchTierList(baseUrl, selectedMap),
+    enabled: !!selectedMap, // Fetch only when a map is selected
+    staleTime: 24 * 60 * 60 * 1000, // Cache for 1 day
+    retry: 2, // Retry on failure
+  });
 
-    if (selectedMapValue) {
-      try {
-        const response = await fetch(`${baseUrl}/tier_list`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ map: selectedMapValue }),
-        });
-
-        const data = await response.json();
-        setTierData(data); 
-      } catch (error) {
-        console.error("Error fetching tier data:", error);
-        setTierData([]); 
-      }
-    }
+  const handleMapChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedMap(e.target.value);
   };
 
-  // Using useMemo to prevent recalculation on every render
-  const tieredBrawlers = useMemo(() => {
-    // Default empty tier structure
-    const tiers = ['S', 'A', 'B', 'C', 'D', 'E', 'F'];
-    const emptyTiers: Record<string, [string, number][]> = {};
-    
-    tiers.forEach(tier => {
-      emptyTiers[tier] = [];
-    });
-
-    if (!tierData || tierData.length === 0) {
-      return emptyTiers;
-    }
-    
-    // Sort brawlers by score in descending order
-    const sortedBrawlers = [...tierData].sort((a, b) => b[1] - a[1]);
-    
-    // Calculate mean and standard deviation
-    const scores = sortedBrawlers.map(item => item[1]);
-    const mean = scores.reduce((sum, score) => sum + score, 0) / scores.length;
-    const variance = scores.reduce((sum, score) => sum + Math.pow(score - mean, 2), 0) / scores.length;
-    const stdDev = Math.sqrt(variance);
-    
-    // Define tier boundaries using standard deviations
-    const tierBoundaries = [
-      mean + 1.5 * stdDev,  // S tier: >1.5σ above mean
-      mean + 0.8 * stdDev,  // A tier: 0.8σ to 1.5σ above mean
-      mean + 0.3 * stdDev,  // B tier: 0.3σ to 0.8σ above mean
-      mean - 0.3 * stdDev,  // C tier: -0.3σ to 0.3σ from mean (average)
-      mean - 0.8 * stdDev,  // D tier: -0.8σ to -0.3σ below mean
-      mean - 1.5 * stdDev,  // E tier: -1.5σ to -0.8σ below mean
-      -Infinity            // F tier: <-1.5σ below mean
-    ];
-    
-    // Create the tiered data structure
-    const tieredData: Record<string, [string, number][]> = {};
-    
-    tiers.forEach(tier => {
-      tieredData[tier] = [];
-    });
-    
-    // Distribute brawlers into tiers based on standard deviation boundaries
-    sortedBrawlers.forEach(brawler => {
-      const [name, score] = brawler;
-      for (let i = 0; i < tierBoundaries.length; i++) {
-        if (score >= tierBoundaries[i]) {
-          tieredData[tiers[i]].push([name, score]);
-          break;
-        }
-      }
-    });
-    
-    return tieredData;
-  }, [tierData]);
-
-  // Traditional tier list color scheme
-  const getTierColors = (tier: string) => {
-    const colorMap: Record<string, { bg: string, text: string }> = {
-      'S': { bg: 'bg-red-500', text: 'text-white' },
-      'A': { bg: 'bg-orange-500', text: 'text-white' },
-      'B': { bg: 'bg-yellow-500', text: 'text-black' },
-      'C': { bg: 'bg-green-500', text: 'text-white' },
-      'D': { bg: 'bg-blue-500', text: 'text-white' },
-      'E': { bg: 'bg-indigo-500', text: 'text-white' },
-      'F': { bg: 'bg-gray-500', text: 'text-white' }
-    };
-    return colorMap[tier];
-  };
-
-  if (isLoading) {
+  if (contextLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-base-300 text-base-content">
         <div className="loading loading-spinner loading-lg text-primary"></div>
@@ -115,64 +45,31 @@ const TierListPage: React.FC = () => {
   }
 
   return (
-    <main className="container mx-auto p-4">
-      <div className="card bg-base-100 shadow-xl mb-6">
-        <div className="card-body p-4">
-          <h1 className="card-title text-xl font-bold text-primary">Brawl Stars Tier List</h1>
-          
-          <SelectMap
-            mapsData={maps}
-            selectedMap={selectedMap}
-            handleMapChange={handleMapChange}
+    <ImageProvider>
+      <main className="container mx-auto p-4">
+        <div className="card bg-base-100 shadow-xl mb-6">
+          <div className="card-body p-4">
+            <h1 className="card-title text-xl font-bold text-primary title-font">Brawl Stars Tier List</h1>
+            <SelectMap mapsData={maps} selectedMap={selectedMap} handleMapChange={handleMapChange} />
+          </div>
+        </div>
+
+        {isLoading && selectedMap ? (
+          <div className="flex justify-center my-8">
+            <div className="loading loading-spinner loading-lg text-primary"></div>
+          </div>
+        ) : error ? (
+          <p className="text-red-500 text-center">Error fetching tier list: {error.message}</p>
+        ) : selectedMap && tierData?.length > 0 ? (
+          <TierListComponent brawlers={brawlers} tierData={tierData} selectedMap={selectedMap} />
+        ) : (
+          <CoffeeWaiting
+            name="tier list"
+            description="The tier list will show brawlers ranked by their performance"
           />
-        </div>
-      </div>
-
-      {selectedMap && tierData.length > 0 ? (
-        <div className="space-y-2">
-          {Object.keys(tieredBrawlers).map((tier) => (
-            tieredBrawlers[tier].length > 0 && (
-              <div key={tier} className="flex flex-col shadow-md rounded-md overflow-hidden">
-                <div className={`${getTierColors(tier).bg} ${getTierColors(tier).text} py-2 px-4 flex items-center`}>
-                  <div className="font-bold text-lg mr-2">{tier}</div>
-                  <div className="text-sm">TIER</div>
-                </div>
-                  <div className="bg-base-100 p-2"> 
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2">
-                      {tieredBrawlers[tier].map(([brawlerName, score], index) => {
-                        const brawler = brawlers.find(b => b.name.toUpperCase() === brawlerName); // Find the brawler object from the brawlers array
-                        if (!brawler) return null; // If brawler not found, skip this iteration
-
-                        return (
-                          <div key={index} className="card bg-base-200 shadow-sm hover:shadow-md transition-shadow">
-                            <div className="card-body p-1 gap-y-1 text-xs">
-                              {/* Display the brawler's image */}
-                              
-                              <img
-                                width={150}
-                                height={150}
-                                src={brawler.imageUrl} // Image URL for the brawler
-                                alt={brawlerName}
-                                className="h-14 sm:h-10 md:h-10 lg:h-14 xl:h-18 object-contain mx-auto"
-                              />
-                              <h3 className="font-bold text-center truncate" title={brawlerName}>{brawlerName}</h3>
-                              <div className="text-center opacity-70">{score.toFixed(2)}</div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-              </div>
-            )
-          ))}
-        </div>
-      ) : (
-        !isLoading && (
-          <CoffeeWaiting name="tier list" description="The tier list will show brawlers ranked by their performance"></CoffeeWaiting>
-        )
-      )}
-    </main>
+        )}
+      </main>
+    </ImageProvider>
   );
 };
 

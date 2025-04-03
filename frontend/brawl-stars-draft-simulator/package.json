@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@million/lint": "^1.0.14",
+    "@tanstack/react-query": "^5.71.5",
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
     "aos": "^2.3.4",

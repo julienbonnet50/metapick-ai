@@ -1,68 +1,58 @@
-// CachedImage.jsx
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import imageCache from '../utils/cacheImage';
 
-interface CachedImageProps {
-    src: string;
-    alt: string;
-    className: string;
-    width: number;
-    height: number;
-    [key: string]: any; // for the ...props
-  }
+const CachedImage: React.FC<CachedImageProps> = ({ 
+  src, 
+  alt, 
+  width, 
+  height, 
+  className = '', 
+  priority = false, 
+  ...props 
+}) => {
+  const [isLoaded, setIsLoaded] = useState(imageCache.cache.has(src));
+  const [imageSrc, setImageSrc] = useState(imageCache.getImage(src));
 
-  const CachedImage = ({ src, alt, className, width, height, ...props }: CachedImageProps) => {
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  
   useEffect(() => {
-    let isMounted = true;
-    
-    const loadImage = async () => {
-      setLoading(true);
-      try {
-        const cachedSrc = await imageCache.getImage(src);
-        if (isMounted) {
-          setImageSrc(cachedSrc);
-          setLoading(false);
+    if (!isLoaded) {
+      const loadImage = async () => {
+        try {
+          await imageCache.loadImage(src);
+          setImageSrc(imageCache.getImage(src));
+          setIsLoaded(true);
+        } catch (error) {
+          console.error(`Failed to load image: ${src}`, error);
+          // Still set the original source to allow Next.js to handle it
+          setImageSrc(src);
         }
-      } catch (error) {
-        console.error('Error loading image:', error);
-        if (isMounted) {
-          setImageSrc(src); // Fallback to original source
-          setLoading(false);
-        }
-      }
-    };
-    
-    loadImage();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [src]);
-  
+      };
+      
+      loadImage();
+    }
+  }, [src, isLoaded]);
+
   return (
     <>
-      {loading ? (
+      {!isLoaded && (
         <div 
           className={`${className} flex items-center justify-center bg-gray-200`}
-          style={{ width, height }}
+          style={{ width: typeof width === 'number' ? `${width}px` : width, height: typeof height === 'number' ? `${height}px` : height }}
         >
-          <span className="animate-pulse">Loading...</span>
+          <div className="loading loading-spinner loading-sm"></div>
         </div>
-      ) : (
-        <img
-        src={imageSrc?.toString()}
+      )}
+      <Image
+        src={imageSrc}
         alt={alt}
-        className={className}
         width={width}
         height={height}
+        className={`${className} ${!isLoaded ? 'hidden' : ''}`}
+        priority={priority}
         {...props}
-        />
-      )}
+      />
     </>
   );
 };
 
-export default CachedImage;
+export default CachedImage;  // Default export

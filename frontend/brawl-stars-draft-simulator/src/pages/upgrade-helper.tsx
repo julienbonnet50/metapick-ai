@@ -3,6 +3,9 @@ import { useDataContext } from '@components/DataProviderContext';
 import React, { useState, useEffect } from 'react';
 import { CheckCircle2, X, HelpCircle, AlertCircle } from 'lucide-react'; // Added AlertCircle icon
 import { getUpgradeHelperTutorials } from '../app/utils/tutorials';
+import CachedImage from '@components/CachedImage';
+import ImageProvider from "@components/ImageProvider";
+import { useQuery } from "@tanstack/react-query";
 
 const UpgradeHelper = () => {
   const { baseUrl, storageKey, torialShownKey, tutorialLastShownKey, brawlers } = useDataContext();
@@ -200,260 +203,264 @@ const UpgradeHelper = () => {
   };
 
   return (
-    <div className="min-h-screen bg-base-200 p-4 flex flex-col items-center">
-      <div className="w-full max-w-4xl">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-center text-primary">Brawl Stars Upgrade Helper</h1>
-          <button 
-            onClick={showTutorialManually} 
-            className="btn btn-circle btn-ghost"
-            title="Show Tutorial"
-          >
-            <HelpCircle size={24} />
-          </button>
-        </div>
-        
-        <div className="card bg-base-100 shadow-xl mb-8">
-          <div className="card-body">
-            <h2 className="card-title text-2xl mb-4">Find your best upgrade options</h2>
-            
-            <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4 mb-4">
-              {/* Account Tag Selection */}
-              <div 
-                className={`relative w-full md:w-96 ${tutorialHighlight === 'account-input' ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
-                id="account-input"
-              >
-                <input
-                  type="text"
-                  id="accountTag"
-                  name="accountTag"
-                  placeholder="Account Tag (#GZ95SFSKJ3)"
-                  className={`input input-bordered w-full pr-10 ${accountNotFound ? 'input-error' : ''}`}
-                  value={accountTag}
-                  onChange={handleInputChange}
-                  required
-                />
-                
-                {/* Validation Icon (Only Show When Valid) */}
-                {isAccountTagValid && availableBrawlers.length > 0 && (
-                  <CheckCircle2
-                    className="absolute right-8 top-1/2 transform -translate-y-1/2 text-green-500"
-                    size={20}
-                  />
-                )}
-                
-                {/* Account Not Found Indicator */}
-                {accountNotFound && (
-                  <div className="absolute -bottom-6 left-0 text-xs text-error flex items-center">
-                    <AlertCircle size={12} className="mr-1" />
-                    Account not found
-                  </div>
-                )}
-                
-                {/* Clear Button (Only Show When Input is Not Empty) */}
-                {accountTag && (
-                  <button
-                    type="button" // Important to prevent form submission
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    onClick={clearInput}
-                  >
-                    <X size={20} />
-                  </button>
-                )}
-              </div>
-              
-              <button 
-                type="submit" 
-                className="btn btn-primary"
-                disabled={loading || !isAccountTagValid}
-              >
-                {loading ? <span className="loading loading-spinner"></span> : 'Analyze'}
-              </button>
-            </form>
-            
-            {/* Removed the error alert div that was here previously */}
-          </div>
-        </div>
-        
-        {data.length > 0 && (
-          <>
-            <div 
-              className={`card bg-base-100 shadow-xl mb-8 ${tutorialHighlight === 'recommended-upgrades' ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
-              id="recommended-upgrades"
+    <ImageProvider>
+      <div className="min-h-screen bg-base-200 p-4 flex flex-col items-center">
+        <div className="w-full max-w-4xl">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-4xl font-bold text-center text-primary title-font">Brawl Stars Upgrade Helper</h1>
+            <button 
+              onClick={showTutorialManually} 
+              className="btn btn-circle btn-ghost"
+              title="Show Tutorial"
             >
-              <div className="card-body">
-                <h2 className="card-title text-2xl mb-4">Recommended Upgrades</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {topBrawlers.map((brawler, index) => {
-                  const brawlerData = brawlers.find((b) => 
-                    b.name.toUpperCase() === brawler.name.toUpperCase() ||
-                    (brawler.name === "LARRY & LAWRIE" && b.name.toUpperCase() === "LARRY")
-                  );
+              <HelpCircle size={24} />
+            </button>
+          </div>
+          
+          <div className="card bg-base-100 shadow-xl mb-8">
+            <div className="card-body">
+              <h2 className="card-title text-2xl mb-4">Find your best upgrade options</h2>
+              
+              <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4 mb-4">
+                {/* Account Tag Selection */}
+                <div 
+                  className={`relative w-full md:w-96 ${tutorialHighlight === 'account-input' ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
+                  id="account-input"
+                >
+                  <input
+                    type="text"
+                    id="accountTag"
+                    name="accountTag"
+                    placeholder="Account Tag (#GZ95SFSKJ3)"
+                    className={`input input-bordered w-full pr-10 ${accountNotFound ? 'input-error' : ''}`}
+                    value={accountTag}
+                    onChange={handleInputChange}
+                    required
+                  />
+                  
+                  {/* Validation Icon (Only Show When Valid) */}
+                  {isAccountTagValid && availableBrawlers.length > 0 && (
+                    <CheckCircle2
+                      className="absolute right-8 top-1/2 transform -translate-y-1/2 text-green-500"
+                      size={20}
+                    />
+                  )}
+                  
+                  {/* Account Not Found Indicator */}
+                  {accountNotFound && (
+                    <div className="absolute -bottom-6 left-0 text-xs text-error flex items-center">
+                      <AlertCircle size={12} className="mr-1" />
+                      Account not found
+                    </div>
+                  )}
+                  
+                  {/* Clear Button (Only Show When Input is Not Empty) */}
+                  {accountTag && (
+                    <button
+                      type="button" // Important to prevent form submission
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      onClick={clearInput}
+                    >
+                      <X size={20} />
+                    </button>
+                  )}
+                </div>
+                
+                <button 
+                  type="submit" 
+                  className="btn btn-primary"
+                  disabled={loading || !isAccountTagValid}
+                >
+                  {loading ? <span className="loading loading-spinner"></span> : 'Analyze'}
+                </button>
+              </form>
+              
+              {/* Removed the error alert div that was here previously */}
+            </div>
+          </div>
+          
+          {data.length > 0 && (
+            <>
+              <div 
+                className={`card bg-base-100 shadow-xl mb-8 ${tutorialHighlight === 'recommended-upgrades' ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
+                id="recommended-upgrades"
+              >
+                <div className="card-body">
+                  <h2 className="card-title text-2xl mb-4">Recommended Upgrades</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {topBrawlers.map((brawler, index) => {
+                    const brawlerData = brawlers.find((b) => 
+                      b.name.toUpperCase() === brawler.name.toUpperCase() ||
+                      (brawler.name === "LARRY & LAWRIE" && b.name.toUpperCase() === "LARRY")
+                    );
 
-                  return (
-                    <div key={brawler.name} className="card bg-base-200 shadow-md">
-                      <div className="card-body p-4 flex items-center">
-                        {/* Brawler Image */}
-                        <img
-                          width={80}
-                          height={80}
-                          src={brawlerData?.imageUrl || "/default-image.png"}
-                          alt={brawler.name}
-                          className="mr-4 rounded-full"
-                        />
-                        <div className="w-full">
-                          <h3 className="card-title text-lg">{brawler.name}</h3>
-                          <div className="flex items-center mt-2">
-                            <div className="w-full bg-gray-700 rounded-full h-4">
-                              <div 
-                                className={`${getScoreColor(brawler.score)} h-4 rounded-full`} 
-                                style={{width: `${Math.min(100, brawler.score || 0)}%`}}
-                              ></div>
+                    return (
+                      <div key={brawler.name} className="card bg-base-200 shadow-md">
+                        <div className="card-body p-4 flex items-center">
+                          {/* Brawler Image */}
+                          <img
+                            width={80}
+                            height={80}
+                            src={brawlerData?.imageUrl || "/default-image.png"}
+                            alt={brawler.name}
+                            className="mr-4 rounded-full"
+                          />
+                          <div className="w-full">
+                            <h3 className="card-title text-lg">{brawler.name}</h3>
+                            <div className="flex items-center mt-2">
+                              <div className="w-full bg-gray-700 rounded-full h-4">
+                                <div 
+                                  className={`${getScoreColor(brawler.score)} h-4 rounded-full`} 
+                                  style={{width: `${Math.min(100, brawler.score || 0)}%`}}
+                                ></div>
+                              </div>
+                              <span className="ml-2 font-bold">
+                                {brawler.score !== null ? brawler.score.toFixed(1) : 'N/A'}
+                              </span>
                             </div>
-                            <span className="ml-2 font-bold">
-                              {brawler.score !== null ? brawler.score.toFixed(1) : 'N/A'}
-                            </span>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <div 
-              className={`card bg-base-100 shadow-xl ${tutorialHighlight === 'all-brawlers' ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
-              id="all-brawlers"
-            >
-              <div className="card-body">
-                <h2 className="card-title text-2xl mb-4">All Brawlers</h2>
-                <div className="overflow-x-auto">
-                  <table className="table table-zebra w-full">
-                    <thead>
-                      <tr>
-                        <th 
-                          className="cursor-pointer"
-                          onClick={() => handleSort('name')}
-                        >
-                          Name
-                          {sortField === 'name' && (
-                            <span>{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
-                          )}
-                        </th>
-                        <th 
-                          className="cursor-pointer"
-                          onClick={() => handleSort('score')}
-                        >
-                          Score
-                          {sortField === 'score' && (
-                            <span>{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
-                          )}
-                        </th>
-                        <th 
-                          className="cursor-pointer"
-                          onClick={() => handleSort('total_power_points')}
-                        >
-                          Power Points
-                          {sortField === 'total_power_points' && (
-                            <span>{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
-                          )}
-                        </th>
-                        <th 
-                          className="cursor-pointer"
-                          onClick={() => handleSort('total_coins')}
-                        >
-                          Coins
-                          {sortField === 'total_coins' && (
-                            <span>{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
-                          )}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                    {sortedData.map((brawler) => {
-                      const brawlerData = brawlers.find((b) => 
-                        b.name.toUpperCase() === brawler.name.toUpperCase() ||
-                        (brawler.name === "LARRY & LAWRIE" && b.name.toUpperCase() === "LARRY")
-                      );
-
-                      return (
-                        <tr key={brawler.name}>
-                          <td className="flex items-center">
-                            {/* Add Brawler Image before Name */}
-                            <img
-                              width={20}
-                              height={20}
-                              src={brawlerData?.imageUrl || "/default-image.png"}
-                              alt={brawler.name}
-                              className="mr-2"
-                            />
-                            {brawler.name}
-                          </td>
-                          <td>
-                            <div className="flex items-center">
-                              <div className="w-24 bg-gray-700 rounded-full h-2 mr-2">
-                                <div 
-                                  className={`${getScoreColor(brawler.score)} h-2 rounded-full`} 
-                                  style={{ width: `${Math.min(100, brawler.score || 0)}%` }}
-                                ></div>
-                              </div>
-                              {brawler.score !== null ? brawler.score.toFixed(1) : 'N/A'}
-                            </div>
-                          </td>
-                          <td>{brawler.total_power_points}</td>
-                          <td>{brawler.total_coins}</td>
+              
+              <div 
+                className={`card bg-base-100 shadow-xl ${tutorialHighlight === 'all-brawlers' ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
+                id="all-brawlers"
+              >
+                <div className="card-body">
+                  <h2 className="card-title text-2xl mb-4">All Brawlers</h2>
+                  <div className="overflow-x-auto">
+                    <table className="table table-zebra w-full">
+                      <thead>
+                        <tr>
+                          <th 
+                            className="cursor-pointer"
+                            onClick={() => handleSort('name')}
+                          >
+                            Name
+                            {sortField === 'name' && (
+                              <span>{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                            )}
+                          </th>
+                          <th 
+                            className="cursor-pointer"
+                            onClick={() => handleSort('score')}
+                          >
+                            Score
+                            {sortField === 'score' && (
+                              <span>{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                            )}
+                          </th>
+                          <th 
+                            className="cursor-pointer"
+                            onClick={() => handleSort('total_power_points')}
+                          >
+                            Power Points
+                            {sortField === 'total_power_points' && (
+                              <span>{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                            )}
+                          </th>
+                          <th 
+                            className="cursor-pointer"
+                            onClick={() => handleSort('total_coins')}
+                          >
+                            Coins
+                            {sortField === 'total_coins' && (
+                              <span>{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
+                            )}
+                          </th>
                         </tr>
-                      );
-                    })}
+                      </thead>
+                      <tbody>
+                      {sortedData.map((brawler) => {
+                        const brawlerData = brawlers.find((b) => 
+                          b.name.toUpperCase() === brawler.name.toUpperCase() ||
+                          (brawler.name === "LARRY & LAWRIE" && b.name.toUpperCase() === "LARRY")
+                        );
 
-                    </tbody>
-                  </table>
+                        return (
+                          <tr key={brawler.name}>
+                            <td className="flex items-center">
+                              {/* Add Brawler Image before Name */}
+                              <CachedImage
+                                key={brawler.name}
+                                width={20}
+                                height={20}
+                                src={brawlerData?.imageUrl || "/default-image.png"}
+                                alt={brawler.name}
+                                className="mr-2"
+                              />
+                              {brawler.name}
+                            </td>
+                            <td>
+                              <div className="flex items-center">
+                                <div className="w-24 bg-gray-700 rounded-full h-2 mr-2">
+                                  <div 
+                                    className={`${getScoreColor(brawler.score)} h-2 rounded-full`} 
+                                    style={{ width: `${Math.min(100, brawler.score || 0)}%` }}
+                                  ></div>
+                                </div>
+                                {brawler.score !== null ? brawler.score.toFixed(1) : 'N/A'}
+                              </div>
+                            </td>
+                            <td>{brawler.total_power_points}</td>
+                            <td>{brawler.total_coins}</td>
+                          </tr>
+                        );
+                      })}
+
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
-            </div>
-          </>
-        )}
-      </div>
-      
-      {/* Tutorial Modal */}
-      {showTutorial && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="card bg-base-100 w-full max-w-md mx-4">
-            <div className="card-body">
-              <div className="flex justify-between items-center">
-                <h2 className="card-title text-xl">{tutorialSteps[tutorialStep].title}</h2>
-                <button onClick={closeTutorial} className="btn btn-sm btn-circle btn-ghost">
-                  <X size={20} />
-                </button>
-              </div>
-              <p className="py-4">{tutorialSteps[tutorialStep].content}</p>
-              <div className="card-actions justify-between mt-4">
-                <button 
-                  onClick={prevTutorialStep}
-                  className="btn btn-outline"
-                  disabled={tutorialStep === 0}
-                >
-                  Previous
-                </button>
-                <div>
-                  <span className="mr-4 text-sm">
-                    {tutorialStep + 1} of {tutorialSteps.length}
-                  </span>
-                  <button 
-                    onClick={nextTutorialStep}
-                    className="btn btn-primary"
-                  >
-                    {tutorialStep === tutorialSteps.length - 1 ? 'Finish' : 'Next'}
+            </>
+          )}
+        </div>
+        
+        {/* Tutorial Modal */}
+        {showTutorial && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="card bg-base-100 w-full max-w-md mx-4">
+              <div className="card-body">
+                <div className="flex justify-between items-center">
+                  <h2 className="card-title text-xl">{tutorialSteps[tutorialStep].title}</h2>
+                  <button onClick={closeTutorial} className="btn btn-sm btn-circle btn-ghost">
+                    <X size={20} />
                   </button>
+                </div>
+                <p className="py-4">{tutorialSteps[tutorialStep].content}</p>
+                <div className="card-actions justify-between mt-4">
+                  <button 
+                    onClick={prevTutorialStep}
+                    className="btn btn-outline"
+                    disabled={tutorialStep === 0}
+                  >
+                    Previous
+                  </button>
+                  <div>
+                    <span className="mr-4 text-sm">
+                      {tutorialStep + 1} of {tutorialSteps.length}
+                    </span>
+                    <button 
+                      onClick={nextTutorialStep}
+                      className="btn btn-primary"
+                    >
+                      {tutorialStep === tutorialSteps.length - 1 ? 'Finish' : 'Next'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </ImageProvider>
+    
   );
 };
 

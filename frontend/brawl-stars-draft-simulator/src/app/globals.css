@@ -13,13 +13,26 @@ body {
 
 /* Custom fonts */
 @font-face {
-  font-family: "Brawl Stars Lilita One";
-  src: url("/LilitaOne-Regular.ttf") format("truetype");
+  font-family: 'LilitaOne';
+  src: url('/LilitaOne-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
-@font-face {
-  font-family: "Brawl Stars Roboto";
-  src: url("/Roboto.ttf") format("truetype");
+.title-font {
+  font-family: 'LilitaOne', sans-serif;
+  font-weight: normal;
+  font-style: normal;
+}
+
+@layer components {
+  .brawler-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .brawler-cell {
+    min-height: 96px;
+  }
 }
 
 /* Optional: Custom fonts fallback */
