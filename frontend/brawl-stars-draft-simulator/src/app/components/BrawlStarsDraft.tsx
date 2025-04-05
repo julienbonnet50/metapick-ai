@@ -46,7 +46,7 @@ const BrawlStarsDraft = () => {
   const tutorialSteps = getDraftToolTutorials();
 
   // Constants for stale time and cache time
-  const ONE_DAY_MS = 24 * 60 * 60 * 1000; // 1 day in milliseconds
+  const five_minutes = 5 * 60 * 1000; // 1 day in milliseconds
 
   // Load from cache on mount
   useEffect(() => {
@@ -101,7 +101,7 @@ const BrawlStarsDraft = () => {
 
       return await response.json();
     },
-    staleTime: ONE_DAY_MS, // 1 day stale time
+    staleTime: five_minutes, // 1 day stale time
     enabled: teamA.length === 3 && teamB.length === 3 && !!selectedMap,
   });
 
@@ -113,7 +113,8 @@ const BrawlStarsDraft = () => {
       teamA.map(b => b.id).join(','), 
       teamB.map(b => b.id).join(','),
       bannedBrawlers.map(b => b.id).join(','),
-      accountTag
+      accountTag,
+      isAccountTagFetched
     ],
     queryFn: async () => {
       if (!selectedMap) {
@@ -155,8 +156,8 @@ const BrawlStarsDraft = () => {
         imageUrl,
       }));
     },
-    staleTime: ONE_DAY_MS, // 1 day stale time
-    enabled: !!selectedMap && isAccountTagFetched,
+    staleTime: five_minutes, // 1 day stale time
+    enabled: !!selectedMap,
   });
 
   // React Query for available brawlers
@@ -462,31 +463,20 @@ const BrawlStarsDraft = () => {
             />
 
             {/* Validation Icon (Handle Loading, Valid, and Error States) */}
-            {isAccountTagValid && isAccountTagFetched && availableBrawlersQuery && (
-              <CheckCircle2 
-                className="absolute right-8 top-1/2 transform -translate-y-1/2 text-green-500" 
-                size={16} // ⬅ Smaller icon
-              />
-            )}
-
-            {/* Show Loading Circle when isAccountTagValid is true but isAccountTagFecthed is false */}
-            {isAccountTagValid && !isAccountTagFetched && (
-              <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
-                <svg className="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.25" />
-                  <path d="M22 12a10 10 0 1 1-10-10" fill="none"></path>
-                </svg>
-              </div>
-            )}
-
-            {/* Show Cross when isAccountTagValid is false and isAccountTagFecthed is false */}
-            {!isAccountTagValid && !isAccountTagFetched && (
-              <XCircle 
-                className="absolute right-8 top-1/2 transform -translate-y-1/2 text-red-500" 
-                size={16} // ⬅ Smaller icon
-              />
-            )}
-
+            <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
+              {isAccountTagValid ? (
+                isAccountTagFetched ? (
+                  <CheckCircle2 className="text-green-500" size={16} />
+                ) : (
+                  <svg className="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.25" />
+                    <path d="M22 12a10 10 0 1 1-10-10" fill="none"></path>
+                  </svg>
+                )
+              ) : (
+                !isAccountTagFetched && <XCircle className="text-red-500" size={16} />
+              )}
+            </div>
 
             {/* Clear Button (Only Show When Input is Not Empty) */}
             {accountTag && (
