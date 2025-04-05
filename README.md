@@ -1,23 +1,37 @@
 # Meta Pick AI
 
-![alt text](assets/screen.png)
+![Meta Pick AI demo](assets/metapick-ai.gif)
 
 ## Description
-Meta Pick AI is a web-based tool designed to help players improve their ranked gameplay by optimizing their draft picks. With a **Flask backend** powered by a **Neural Network trained on millions of games (using PyTorch)**, the system predicts the **top 10 best brawlers** to pick for a given map, considering ally picks, enemy picks, and bans. The frontend is built using **React, TailwindCSS, and DaisyUI** to ensure a smooth and user-friendly experience.
+**Meta Pick AI** is a web-based assistant designed to help Brawl Stars players dominate ranked gameplay by **mastering the draft and understanding the meta**. Powered by a **Neural Network trained on millions of games**, the platform offers tailored recommendations and insights to boost your performance and decision-making.
 
-**✅ Currently live at : https://metapick-ai.vercel.app ✅**
+> ✅ **Live now at:** [https://metapick-ai.vercel.app](https://metapick-ai.vercel.app)
 
-## Features
-- 🏆 **AI-powered draft recommendations**: Get optimal brawler picks based on real game data.  
-- 🗺️ **Map-based suggestions**: Tailored recommendations depending on the selected map.  
-- 🔍 **Real-time predictions**: Flask API processes inputs and returns the best picks instantly.  
-- 🎨 **Modern UI**: Built with React, TailwindCSS, and DaisyUI for a sleek and responsive design.  
+---
+
+## 🔑 Key Features
+
+### 🧠 Draft Tool
+Optimize your picks with our AI-powered **draft assistant**. Just select a map, enter ally/enemy picks and bans — and get the **top 10 brawlers** to pick instantly. The model considers synergies, counters, and map-specific stats.
+
+### 📊 Stats Explorer
+Curious how the AI was trained? Dive into our **Stats Tool** and explore the **raw training data** used to build the model — from pick rates to win rates, across maps and ranks. Perfect for data lovers and competitive players.
+
+### 🧾 Tier List Page
+Check out the **tier list** for every map and game mode. Quickly see which brawlers perform the best and stay up-to-date with the current meta.
+
+### ⚙️ Upgrade Helper
+Not sure who to power up next? The **Upgrade Helper** recommends the best brawlers to upgrade based on their current meta strength and versatility — so you get the most value from your resources.
+
+---
 
 ## Tech Stack
 - **Backend**: Gunicorn + Flask (Python), PyTorch (Neural Network for predictions)  
 - **Frontend**: React, TailwindCSS, DaisyUI  
 - **Database**: PostgreSQL  
 - **Deployment**: Front-end with Vercel, Back-end with Render.
+
+---
 
 ## Installation & Setup
 
