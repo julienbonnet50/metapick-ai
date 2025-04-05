@@ -19,6 +19,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         description="Your complete toolkit for mastering Brawl Stars - stats, tier lists, draft tools, and more to dominate every match." 
         url="https://metapick-ai.vercel.app/" 
         image={metapickIcon.src}
+        color="FF5733"
+        siteName="Metapick-AI" 
       />
       <Navbar toggleHowToUse={toggleHowToUse} showHowToUse={showHowToUse} />
       {showHowToUse && <HowToUseDraft />}
