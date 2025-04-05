@@ -54,12 +54,45 @@ npm run dev
 
 ### 4. Open the website in your browser.
 
-## API Endpoints
-- `POST /simulate_draft` – Returns top brawler recommendations based on input.  
-- `POST /predict_winrate` – Returns estimated winrate of the game, based on input.  
-- `GET /get_maps` – Fetches available maps.  
-- `GET /get_brawlers` – Fetches brawler data.
-- `GET /get_game_versions` – Fetches available versions of db, trained model, and state of ranked.    
+## 📡 API Endpoints
+
+### 🔍 Draft & Winrate
+- `POST /simulate_draft`  
+  → Returns the top 10 brawler recommendations based on current map, ally picks, enemy picks, bans, and available brawlers.
+
+- `POST /predict_winrate`  
+  → Predicts the estimated winrate based on team compositions and selected map.
+
+---
+
+### 🗺️ Game Data
+- `GET /get_maps`  
+  → Retrieves the list of all available maps supported by the model.
+
+- `GET /get_brawlers`  
+  → Returns detailed data for all brawlers (name, image URL, etc.).
+
+- `GET /get_game_versions`  
+  → Fetches the current versions of the database, model, and ranked state.
+
+---
+
+### 📈 Meta & Stats Tools
+- `POST /tier_list`  
+  → Returns a tier list of brawlers for a selected map.
+
+- `POST /stats`  
+  → Retrieves trained statistical data (pick/win rates, etc.) for a selected map.
+
+---
+
+### 🧾 Account Insights
+- `POST /account`  
+  → Fetches high-power brawlers from a player account (requires Brawl Stars tag).
+
+- `POST /account-upgrade-helper`  
+  → Suggests which brawlers to upgrade based on the current meta, cost-efficiency, and your account data.
+
 
 
 ## Contributing
